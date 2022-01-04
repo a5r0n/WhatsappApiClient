@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "WhatsappApiClient"
+version = "0.1.0"
+description = "Whatsapp API client"
+authors = ["a5r0n <a5r0n@users.noreply.github.com>"]
+packages = [{ include = "whatsapp" }]
+[tool.poetry.dependencies]
+python = "^3.9"
+driconfig = "^0.1.1"
+aiohttp = "^3.8.1"
+loguru = "^0.5.3"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+black = {version = "^21.12b0", allow-prereleases = true}
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0"
+tag_format = "v$version"
+version_files = [
+    "pyproject.toml:version",
+    "whatsapp/__init__.py:__version__"
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

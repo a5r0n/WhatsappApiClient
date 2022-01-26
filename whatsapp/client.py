@@ -147,12 +147,10 @@ class Client:
                         messages.interactive.Section(
                             title=title,
                             rows=[
-                                messages.interactive.Button(
-                                    reply=messages.interactive.ButtonRow(
-                                        id=id,
-                                        title=title,
-                                        description=args[0] if args else None,
-                                    )
+                                messages.interactive.SectionRow(
+                                    id=id,
+                                    title=title,
+                                    description=args[0] if args else None,
                                 )
                                 for id, title, *args in buttons
                             ],

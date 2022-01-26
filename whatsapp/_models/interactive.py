@@ -62,7 +62,7 @@ class Action(BaseModel):
 
 
 class ListAction(Action):
-    button: Button
+    button: str
     sections: List[Section]
 
 

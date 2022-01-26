@@ -1,7 +1,8 @@
+from typing import Optional
 from . import __version__
 from driconfig import DriConfig
 
-from pydantic import BaseSettings
+from pydantic import BaseSettings, ValidationError, validator
 from os.path import split
 
 
@@ -14,7 +15,7 @@ class ConfigConfig(BaseSettings):
 
 class WhatsAppConfig(DriConfig):
     wa_id: str
-    token: str
+    token: Optional[str]
     endpoint: str
 
     use_token: bool = True
@@ -28,3 +29,9 @@ class WhatsAppConfig(DriConfig):
     @property
     def is_logged_in(self):
         return self.use_token and self.token is not None or self.wa_id is not None
+
+    @validator("token")
+    def check_token(cls, v, values: dict):
+        if not v and not values.get("wa_id"):
+            raise ValidationError("Either token or wa_id must be specified")
+        return v

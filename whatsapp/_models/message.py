@@ -8,6 +8,7 @@ class MessageType(str, Enum):
     IMAGE = "image"
     VIDEO = "video"
     AUDIO = "audio"
+    DOCUMENT = "document"
     INTERACTIVE = "interactive"
 
 

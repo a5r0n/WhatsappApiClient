@@ -104,6 +104,7 @@ class Message(BaseModel):
     audio: Optional[Media]
     voice: Optional[Media]
     video: Optional[Media]
+    document: Optional[Media]
     sticker: Optional[Sticker]
     contacts: Optional[Contacts]
     interactive: Optional[Interactive] = None

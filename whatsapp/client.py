@@ -125,3 +125,40 @@ class Client:
             ),
         )
         return await self.send(data=message)
+
+    async def send_list(
+        self,
+        to: str,
+        text: str,
+        title: str,
+        buttons: List[Tuple[str, str]],
+        button: str = None,
+    ):
+        button = button or title
+
+        message = messages.Message(
+            to=to,
+            type=messages.MessageType.INTERACTIVE,
+            interactive=messages.interactive.InteractiveList(
+                body=messages.interactive.Text(text=text),
+                action=messages.interactive.ListAction(
+                    button=button,
+                    sections=[
+                        messages.interactive.Section(
+                            title=title,
+                            rows=[
+                                messages.interactive.Button(
+                                    reply=messages.interactive.ButtonRow(
+                                        id=id,
+                                        title=title,
+                                        description=args[0] if args else None,
+                                    )
+                                )
+                                for id, title, *args in buttons
+                            ],
+                        )
+                    ],
+                ),
+            ),
+        )
+        return await self.send(data=message)

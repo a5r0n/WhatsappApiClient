@@ -20,6 +20,7 @@ class Message(BaseModel):
     image: Optional[Media]
     video: Optional[Media]
     audio: Optional[Media]
+    document: Optional[Media]
     interactive: Optional[Union[InteractiveList, InteractiveButtons]]
 
     recipient_type: Optional[Literal["individual", "group"]] = Field(

@@ -1,3 +1,9 @@
+## v0.1.3 (2022-03-27)
+
+### Feat
+
+- **client**: Add image response on login
+
 ## v0.1.2 (2022-01-26)
 
 ### Fix

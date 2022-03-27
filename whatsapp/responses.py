@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 
 
@@ -47,6 +47,19 @@ class Group(BaseModel):
     topic_set_by: Optional[str] = Field(None, alias="TopicSetBy")
 
 
+class AccountStatus(BaseModel):
+    id: str
+    jid: str
+    webhook_url: Optional[str]
+    whatsapp_name: Optional[str]
+    whatsapp_id: int
+    status: Literal["init", "connected", "error"]
+
+
+class UploadedMedia(BaseModel):
+    id: str
+
+
 class Response(BaseModel):
     success: bool
     message: Optional[str]
@@ -63,3 +76,7 @@ class StatusResponse(Response):
 
 class GroupsResponse(Response):
     data: Optional[List[Group]] = []
+
+
+class UploadResponse(Response):
+    media: Optional[List[UploadedMedia]] = []

@@ -4,9 +4,10 @@ from typing import Dict, List, Tuple, Union
 
 from aiohttp import ClientSession
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from whatsapp import errors, messages, responses
+from whatsapp._models.media import Media, MediaTypes
 
 from .config import WhatsAppConfig
 from .utils import needs_login
@@ -42,8 +43,11 @@ class Client:
             # TODO: use custom json encoder
             if isinstance(data, BaseModel):
                 kwargs["json"] = data.dict()
+            else:
+                kwargs["data"] = data
 
         # TODO: some logging
+        logger.debug(f"{method} {url} {kwargs}")
         async with self.session.request(method, url, **kwargs) as resp:
             model_resp: BaseModel = None
 
@@ -105,6 +109,16 @@ class Client:
             "GET",
             f"{self.config.endpoint}/groups",
             response_model=responses.GroupsResponse,
+        )
+        return resp
+
+    async def upload(self, data, mime_type) -> responses.UploadResponse:
+        resp: responses.UploadResponse = await self._do_request(
+            "POST",
+            f"{self.config.endpoint}/media",
+            data=data,
+            response_model=responses.UploadResponse,
+            headers={"Content-Type": mime_type},
         )
         return resp
 
@@ -185,3 +199,41 @@ class Client:
             ),
         )
         return await self.send(data=message)
+
+    async def send_media(
+        self, to, type: str, media_id=None, media_link=None, *args, **kwargs
+    ):
+        try:
+            media = Media.parse_obj(
+                {
+                    "type": type,
+                    "id": media_id,
+                    "link": media_link,
+                    "caption": kwargs.pop("caption", None),
+                    "filename": kwargs.pop("filename", None),
+                }
+            )
+            logger.debug(f"{media}")
+        except ValidationError:
+            raise ValueError("Either media_id or media_link must be specified")
+
+        message = messages.Message.parse_obj(
+            {
+                "to": to,
+                "type": type,
+                type: media,
+            }
+        )
+        return await self.send(data=message, *args, **kwargs)
+
+    async def send_image(self, *args, **kwargs):
+        return await self.send_media(*args, type="image", **kwargs)
+
+    async def send_video(self, *args, **kwargs):
+        return await self.send_media(*args, type="video", **kwargs)
+
+    async def send_audio(self, *args, **kwargs):
+        return await self.send_media(*args, type="audio", **kwargs)
+
+    async def send_document(self, *args, **kwargs):
+        return await self.send_media(*args, type="document", **kwargs)

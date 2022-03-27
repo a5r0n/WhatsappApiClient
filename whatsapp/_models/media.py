@@ -33,18 +33,22 @@ class BaseMedia(BaseModel):
 
 
 class ImageById(BaseMedia):
+    type = MediaTypes.IMAGE
     id: str
 
 
 class AudioById(BaseMedia):
+    type = MediaTypes.AUDIO
     id: str
 
 
 class VideoById(BaseMedia):
+    type = MediaTypes.VIDEO
     id: str
 
 
 class DocumentById(BaseMedia):
+    type = MediaTypes.DOCUMENT
     id: str
     filename: str
 
@@ -57,18 +61,22 @@ class Provider(BaseModel):
 
 
 class ImageByProvider(BaseMedia):
+    type = MediaTypes.IMAGE
     link: str
 
 
 class AudioByProvider(BaseMedia):
+    type = MediaTypes.AUDIO
     link: str
 
 
 class VideoByProvider(BaseMedia):
+    type = MediaTypes.VIDEO
     link: str
 
 
 class DocumentByProvider(BaseMedia):
+    type = MediaTypes.DOCUMENT
     link: str
     filename: str
 

@@ -83,6 +83,31 @@ class Client:
             self.__post_init__()
             return resp
 
+    async def logout(self):
+        resp: responses.LogoutResponse = await self._do_request(
+            "DELETE",
+            f"{self.config.endpoint}/accounts",
+            response_model=responses.LogoutResponse,
+        )
+        self.config.token = None
+        return resp
+
+    async def status(self):
+        resp: responses.StatusResponse = await self._do_request(
+            "GET",
+            f"{self.config.endpoint}/status",
+            response_model=responses.StatusResponse,
+        )
+        return resp
+
+    async def groups(self):
+        resp: responses.GroupsResponse = await self._do_request(
+            "GET",
+            f"{self.config.endpoint}/groups",
+            response_model=responses.GroupsResponse,
+        )
+        return resp
+
     @needs_login
     async def send(self, *args, **kwargs) -> responses.Response:
         return await self._do_request(

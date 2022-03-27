@@ -1,3 +1,9 @@
+## v0.2.0 (2022-03-27)
+
+### Feat
+
+- **media**: Support Uploading and Sending media
+
 ## v0.1.3 (2022-03-27)
 
 ### Feat

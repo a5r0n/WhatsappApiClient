@@ -47,13 +47,11 @@ class Group(BaseModel):
     topic_set_by: Optional[str] = Field(None, alias="TopicSetBy")
 
 
-class AccountStatus(BaseModel):
-    id: str
-    jid: str
-    webhook_url: Optional[str]
-    whatsapp_name: Optional[str]
-    whatsapp_id: int
+class StatusData(BaseModel):
     status: Literal["init", "connected", "error"]
+    id: str
+    whatsapp_name: Optional[str]
+    whatsapp_id: Optional[str]
 
 
 class UploadedMedia(BaseModel):
@@ -71,7 +69,7 @@ class LoginResponse(Response):
 
 
 class StatusResponse(Response):
-    data: Optional[Dict] = {}
+    data: Optional[StatusData] = None
 
 
 class GroupsResponse(Response):
@@ -80,3 +78,7 @@ class GroupsResponse(Response):
 
 class UploadResponse(Response):
     media: Optional[List[UploadedMedia]] = []
+
+    @property
+    def media_id(self) -> Optional[str]:
+        return self.media[0].id if self.media else None

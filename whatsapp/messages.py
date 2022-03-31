@@ -9,7 +9,6 @@ from whatsapp._models import interactive, media, message
 
 
 class AccountInfo(BaseModel):
-    id: str
     webhook_url: Optional[str]
 
 

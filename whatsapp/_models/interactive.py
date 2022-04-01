@@ -25,7 +25,7 @@ class Text(BaseModel):
 
 class Header(BaseModel):
     type: HeaderTypes
-    text: Text
+    text: Optional[Text]
     video: Optional[Media]
     image: Optional[Media]
     document: Optional[Media]

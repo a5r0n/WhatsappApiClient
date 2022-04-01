@@ -6,6 +6,7 @@ import aiohttp
 from whatsapp import __version__
 import pytest
 from whatsapp import WhatsAppClient, WhatsAppConfig
+from whatsapp import messages
 
 import os
 
@@ -175,6 +176,74 @@ async def test_send_buttons(
     client: WhatsAppClient, to: str, text: str, buttons: List[Tuple[str, str]]
 ):
     await client.send_buttons(to, text, buttons)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "header_type,media_link",
+    [
+        ("image", "image_url"),
+        ("video", "video_url"),
+        ("document", "document_url"),
+        ("text", None),
+        (None, None),
+    ],
+)
+@pytest.mark.parametrize("footer", [None, "Footer"])
+async def test_send_interactive_with_header(
+    client: WhatsAppClient,
+    to: str,
+    text: str,
+    buttons: List[Tuple[str, str]],
+    header_type: str,
+    media_link: str,
+    footer: str,
+    request,
+):
+    button = "Choose one"
+
+    if not header_type:
+        header = None
+    elif header_type == "text":
+        header = messages.interactive.Header(
+            type=messages.interactive.HeaderTypes.TEXT,
+            text=messages.interactive.Text(text=text),
+        )
+    elif header_type in ["image", "video", "document"]:
+        media_link = request.getfixturevalue(media_link)
+        header = messages.interactive.Header.parse_obj(
+            {
+                "type": header_type,
+                header_type: messages.interactive.Media.parse_obj(
+                    {"link": media_link, "type": header_type}
+                ),
+            }
+        )
+    else:
+        raise ValueError(f"Unknown header type: {header_type}")
+
+    message = messages.Message(
+        to=to,
+        type=messages.MessageType.INTERACTIVE,
+        interactive=messages.interactive.InteractiveButtons(
+            body=messages.interactive.Text(text=text),
+            header=header,
+            footer=messages.interactive.Text(text=footer) if footer else None,
+            action=messages.interactive.ButtonsAction(
+                buttons=[
+                    messages.interactive.Button(
+                        reply=messages.interactive.ButtonRow(
+                            id=id,
+                            title=title,
+                            description=args[0] if args else None,
+                        )
+                    )
+                    for id, title, *args in buttons
+                ]
+            ),
+        ),
+    )
+    await client.send(data=message)
 
 
 @pytest.mark.asyncio

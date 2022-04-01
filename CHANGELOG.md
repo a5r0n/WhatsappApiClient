@@ -1,3 +1,10 @@
+## v0.2.1 (2022-04-01)
+
+### Fix
+
+- fix Interactive text
+- some fix's
+
 ## v0.2.0 (2022-03-27)
 
 ### Feat

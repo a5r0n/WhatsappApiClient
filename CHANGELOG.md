@@ -1,3 +1,9 @@
+## v0.3.0 (2022-04-02)
+
+### Feat
+
+- **messages**: Add Group & Private messages
+
 ## v0.2.1 (2022-04-01)
 
 ### Fix

@@ -85,7 +85,9 @@ class Status(BaseModel):
 class Context(BaseModel):
     id: Optional[str] = None
     from_: Optional[str] = Field(None, alias="from")
-    forwarded: Optional[bool] = None
+    forwarded: Optional[bool] = False
+    group_id: Optional[str] = None
+    mentions: Optional[List[str]] = None
 
 
 class Button(BaseModel):
@@ -97,6 +99,7 @@ class Message(BaseModel):
     timestamp: str
     from_: str = Field(..., alias="from")
     type: IncomingMessageType
+    group_id: Optional[str] = None
     context: Optional[Context]
 
     text: Optional[Text]
@@ -117,6 +120,14 @@ class Message(BaseModel):
         return self.image or self.audio or self.video or self.voice
 
 
+class PrivateMessage(Message):
+    group_id: Literal["", None]
+
+
+class GroupMessage(Message):
+    group_id: str
+
+
 class WebhookUpdate(BaseModel):
     messages: Optional[List[Message]] = []
     contacts: Optional[List[Contact]] = []
@@ -124,7 +135,7 @@ class WebhookUpdate(BaseModel):
 
 
 class MessageUpdate(WebhookUpdate):
-    messages: List[Message]
+    messages: List[Union[PrivateMessage, GroupMessage]]
     contacts: List[Contact]
 
 

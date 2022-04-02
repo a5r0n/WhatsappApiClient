@@ -121,7 +121,7 @@ class Message(BaseModel):
 
 
 class PrivateMessage(Message):
-    group_id: Literal["", None]
+    group_id: Literal["", None] = None
 
 
 class GroupMessage(Message):

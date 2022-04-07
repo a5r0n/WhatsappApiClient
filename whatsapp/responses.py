@@ -68,6 +68,11 @@ class LoginResponse(Response):
     data: Account
 
 
+class LogoutResponse(Response):
+    success: Literal[True]
+    data: None
+
+
 class StatusResponse(Response):
     data: Optional[StatusData] = None
 

@@ -1,3 +1,9 @@
+## v0.4.0 (2022-04-10)
+
+### Feat
+
+- Add preview_url default config
+
 ## v0.3.2 (2022-04-07)
 
 ### Fix

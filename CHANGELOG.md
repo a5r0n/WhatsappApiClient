@@ -1,3 +1,9 @@
+## v0.4.1 (2022-04-10)
+
+### Fix
+
+- Parse config defaults in Client.send method
+
 ## v0.4.0 (2022-04-10)
 
 ### Feat

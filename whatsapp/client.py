@@ -126,26 +126,29 @@ class Client:
 
     @needs_login
     async def send(self, *args, **kwargs) -> responses.Response:
+        data = kwargs.pop("data", None)
+        if (
+            data is None
+            and isinstance(data, messages.Message)
+            and data.preview_url is None
+        ):
+            data.preview_url = self.config.defaults.preview_url
+
         return await self._do_request(
             "POST",
             f"{self.config.endpoint}/messages",
             *args,
-            data=kwargs.pop("data", {}),
+            data=data,
             response_model=responses.Response,
             **kwargs,
         )
 
     async def send_text(self, to: str, text: str, *args, **kwargs):
-        preview_url = kwargs.pop("preview_url", None)
-        if preview_url is None:
-            preview_url = self.config.defaults.preview_url
-
         message = messages.Message(
             to=to,
             type=messages.MessageType.TEXT,
             text=messages.Text(body=text),
             # TODO: include kwargs
-            preview_url=preview_url,
             **{},
         )
         return await self.send(data=message, *args, **kwargs)

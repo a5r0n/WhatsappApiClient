@@ -28,7 +28,7 @@ class Message(BaseModel):
     )
     ttl: Optional[Dict[str, Any]] = None
     preview_url: Optional[bool] = Field(
-        False,
+        None,
         description="Specifying preview_url in the request is optional when not including a URL in your message.\nTo include a URL preview, set preview_url to true in the message body and make sure the URL begins with http:// or https://. For more information, see the Sending URLs in Text Messages section.",
     )
 

@@ -136,11 +136,16 @@ class Client:
         )
 
     async def send_text(self, to: str, text: str, *args, **kwargs):
+        preview_url = kwargs.pop("preview_url", None)
+        if preview_url is None:
+            preview_url = self.config.defaults.preview_url
+
         message = messages.Message(
             to=to,
             type=messages.MessageType.TEXT,
             text=messages.Text(body=text),
             # TODO: include kwargs
+            preview_url=preview_url,
             **{},
         )
         return await self.send(data=message, *args, **kwargs)

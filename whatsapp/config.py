@@ -2,7 +2,7 @@ from typing import Optional
 from . import __version__
 from driconfig import DriConfig
 
-from pydantic import BaseSettings, ValidationError, validator
+from pydantic import BaseModel, BaseSettings, ValidationError, validator
 from os.path import split
 
 
@@ -13,10 +13,16 @@ class ConfigConfig(BaseSettings):
         env_prefix = "CONFIG_"
 
 
+class DefaultsConfig(BaseModel):
+    preview_url: bool = False
+
+
 class WhatsAppConfig(DriConfig):
     endpoint: str
     wa_id: Optional[str] = None
     token: Optional[str] = None
+
+    defaults: DefaultsConfig
 
     use_token: bool = True
     user_agent: str = f"WhatsAppApiClient/{__version__} (python)"

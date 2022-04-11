@@ -3,7 +3,7 @@ from typing import Dict, List, Literal, Optional, Union
 from pydantic import BaseModel, Field
 
 from whatsapp._models.message import Text
-from whatsapp._models.contacts import Contacts
+from whatsapp._models.contacts import Contacts, Location
 
 
 class IncomingMessageType(str, Enum):
@@ -112,6 +112,7 @@ class Message(BaseModel):
     contacts: Optional[Contacts]
     interactive: Optional[Interactive] = None
     button: Optional[Button]
+    location: Optional[Location]
 
     class Config:
         use_enum_values = True

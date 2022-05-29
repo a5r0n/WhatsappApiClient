@@ -3,6 +3,7 @@ from json import JSONDecodeError
 from typing import Dict, List, Tuple, Union
 
 from aiohttp import ClientSession
+from aiohttp.client_exceptions import ContentTypeError
 from loguru import logger
 from pydantic import BaseModel, ValidationError
 
@@ -39,10 +40,10 @@ class Client:
     async def _do_request(
         self, method, url, response_model: BaseModel = None, **kwargs
     ) -> Union[BaseModel, Dict, str, None]:
-        if data := kwargs.pop("data", {}):
+        if data := kwargs.pop("data", None):
             # TODO: use custom json encoder
             if isinstance(data, BaseModel):
-                kwargs["json"] = data.dict()
+                kwargs["json"] = data.dict(exclude_none=True)
                 data = None
 
         logger.debug(f"{method} {url} {kwargs}")
@@ -53,17 +54,26 @@ class Client:
             try:
                 json_data = await resp.json()
                 text_data = None
+            except ContentTypeError:
+                json_data = None
+                text_data = await resp.text()
+                try:
+                    model_resp = response_model.parse_raw(text_data)
+                except Exception as e:
+                    logger.warning(f"Failed to parse response: {text_data} {e}")
             except JSONDecodeError:
                 # TODO: some logging
                 json_data = {}
                 text_data = await resp.text()
 
             if response_model:
-                with logger.catch(
-                    level="WARNING",
-                    message=f"Failed to parse response as {response_model.__name__}",
-                ):
-                    model_resp = response_model(**json_data)
+                try:
+                    model_resp = response_model.parse_obj(json_data)
+                except ValidationError as e:
+                    model_resp = None
+                    logger.bind(response=resp, data=json_data, error=e).warning(
+                        f"Failed to parse response as {response_model.__name__} {e}"
+                    )
 
             if isinstance(model_resp, responses.Response) and not model_resp.success:
                 raise errors.RequestError(model_resp.message, model_resp.data)
@@ -71,14 +81,16 @@ class Client:
             resp.raise_for_status()
             return model_resp or json_data or text_data
 
-    async def login(self, webhook_url: str = None):
+    async def login(self, webhook_url: str = None, only_status_updates: bool = False):
         if self.config.is_logged_in:
             raise errors.LoginError("Already logged in")
         else:
             resp: responses.LoginResponse = await self._do_request(
                 "POST",
                 f"{self.config.endpoint}/accounts",
-                data=messages.AccountInfo(webhook_url=webhook_url),
+                data=messages.AccountInfo(
+                    webhook_url=webhook_url, only_status_updates=only_status_updates
+                ),
                 response_model=responses.LoginResponse,
             )
             self.config.token = resp.data.token

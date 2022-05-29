@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Optional
+from typing import Dict, List, Literal, Optional, Union
 from pydantic import BaseModel, Field
 
 
@@ -17,34 +17,18 @@ class Account(BaseModel):
     image: str
 
 
-class Participant(BaseModel):
-    is_admin: bool = Field(..., alias="IsAdmin")
-    is_super_admin: bool = Field(..., alias="IsSuperAdmin")
-    jid: str = Field(..., alias="JID")
-
-
 class Group(BaseModel):
-    announce_version_id: str = Field(None, alias="AnnounceVersionID")
-    jid: str = Field(None, alias="JID")
-    name: str = Field(None, alias="Name")
-    name_set_at: str = Field(None, alias="NameSetAt")
-    name_set_by: str = Field(None, alias="NameSetBy")
-    owner_jid: str = Field(None, alias="OwnerJID")
+    id: str
+    name: str
+    topic: Optional[str]
 
-    participant_version_id: str = Field(None, alias="ParticipantVersionID")
-    participants: Optional[List[Participant]] = Field(None, alias="Participants")
+    owner: str
+    admins: List[str] = []
+    members: Optional[List[str]] = []
 
-    disappearing_timer: Optional[int] = Field(None, alias="DisappearingTimer")
-    group_created: Optional[str] = Field(None, alias="GroupCreated")
-
-    is_announce: bool = Field(None, alias="IsAnnounce")
-    is_ephemeral: bool = Field(None, alias="IsEphemeral")
-    is_locked: bool = Field(None, alias="IsLocked")
-
-    topic: Optional[str] = Field(None, alias="Topic")
-    topic_id: Optional[str] = Field(None, alias="TopicID")
-    topic_set_at: Optional[str] = Field(None, alias="TopicSetAt")
-    topic_set_by: Optional[str] = Field(None, alias="TopicSetBy")
+    created: str
+    ephemeral: bool = False
+    locked: bool = False
 
 
 class StatusData(BaseModel):
@@ -61,7 +45,7 @@ class UploadedMedia(BaseModel):
 class Response(BaseModel):
     success: bool
     message: Optional[str]
-    data: Optional[dict]
+    data: Optional[Union[dict, list, str, int, bool]]
 
 
 class LoginResponse(Response):

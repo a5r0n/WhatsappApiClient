@@ -10,6 +10,7 @@ from whatsapp._models import interactive, media, message
 
 class AccountInfo(BaseModel):
     webhook_url: Optional[str]
+    only_status_updates: Optional[bool] = False
 
 
 class Message(BaseModel):

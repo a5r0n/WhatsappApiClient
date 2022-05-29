@@ -1,3 +1,11 @@
+## v0.5.1 (2022-05-29)
+
+### Fix
+
+- update Group, Account and Text models
+- **deps**: Bump driconfig 0.1.1 -> 0.2.0
+- **deps**: bump loguru 0.5.3 -> 0.6.0
+
 ## v0.5.0 (2022-04-11)
 
 ### Feat

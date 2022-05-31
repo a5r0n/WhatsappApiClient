@@ -40,10 +40,10 @@ class Client:
     async def _do_request(
         self, method, url, response_model: BaseModel = None, **kwargs
     ) -> Union[BaseModel, Dict, str, None]:
-        if data := kwargs.pop("data", None):
+        if data := kwargs.pop("data", {}):
             # TODO: use custom json encoder
             if isinstance(data, BaseModel):
-                kwargs["json"] = data.dict(exclude_none=True)
+                kwargs["json"] = data.dict()
                 data = None
 
         logger.debug(f"{method} {url} {kwargs}")
@@ -68,12 +68,14 @@ class Client:
 
             if response_model:
                 try:
-                    model_resp = response_model.parse_obj(json_data)
-                except ValidationError as e:
-                    model_resp = None
-                    logger.bind(response=resp, data=json_data, error=e).warning(
-                        f"Failed to parse response as {response_model.__name__} {e}"
-                    )
+                    model_resp = response_model(**json_data)
+                except Exception as e:
+                    logger.bind(
+                        error=e,
+                        data=json_data or text_data,
+                        response=resp,
+                        model_name=response_model.__class__.__name__,
+                    ).warning(f"Failed to parse response as {response_model.__name__}")
 
             if isinstance(model_resp, responses.Response) and not model_resp.success:
                 raise errors.RequestError(model_resp.message, model_resp.data)
@@ -147,7 +149,7 @@ class Client:
             f"{self.config.endpoint}/messages",
             *args,
             data=data,
-            response_model=responses.Response,
+            response_model=responses.MessageResponse,
             **kwargs,
         )
 

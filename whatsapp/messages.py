@@ -14,6 +14,7 @@ class AccountInfo(BaseModel):
 
 
 class Message(BaseModel):
+    messaging_product: str = "whatsapp"
     type: MessageType
     to: str
     text: Optional[Text]

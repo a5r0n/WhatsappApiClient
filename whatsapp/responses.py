@@ -71,3 +71,10 @@ class UploadResponse(Response):
     @property
     def media_id(self) -> Optional[str]:
         return self.media[0].id if self.media else None
+
+
+class MessageResponse(Response):
+    success: bool = True
+    messaging_product: str
+    contacts: List[Dict[str, str]]
+    messages: List[Dict[str, str]]

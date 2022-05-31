@@ -66,8 +66,38 @@ class GroupsResponse(Response):
 
 
 class UploadResponse(Response):
-    media: Optional[List[UploadedMedia]] = []
+    media: List[UploadedMedia]
 
     @property
     def media_id(self) -> Optional[str]:
         return self.media[0].id if self.media else None
+
+
+class MessageResponse(Response):
+    success: bool = True
+    messaging_product: Literal["whatsapp"] = "whatsapp"
+    contacts: List[Dict[str, str]]
+    messages: List[Dict[str, str]]
+
+
+class MediaResponse(Response):
+    success: bool = True
+    messaging_product: Literal["whatsapp"] = "whatsapp"
+    url: str
+    mime_type: str
+    sha256: str
+    file_size: str
+    id: str
+
+
+class ApiResponse(BaseModel):
+    __root__: Union[
+        MediaResponse,
+        LoginResponse,
+        LogoutResponse,
+        StatusResponse,
+        GroupsResponse,
+        MessageResponse,
+        UploadResponse,
+        Response,
+    ]

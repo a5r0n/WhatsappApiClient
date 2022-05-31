@@ -1,5 +1,6 @@
 from dataclasses import field, dataclass
 from json import JSONDecodeError
+import json
 from typing import Dict, List, Tuple, Union
 
 from aiohttp import ClientSession
@@ -40,10 +41,10 @@ class Client:
     async def _do_request(
         self, method, url, response_model: BaseModel = None, **kwargs
     ) -> Union[BaseModel, Dict, str, None]:
-        if data := kwargs.pop("data", None):
+        if data := kwargs.pop("data", {}):
             # TODO: use custom json encoder
             if isinstance(data, BaseModel):
-                kwargs["json"] = data.dict(exclude_none=True)
+                kwargs["json"] = json.loads(data.json(exclude_none=True))
                 data = None
 
         logger.debug(f"{method} {url} {kwargs}")
@@ -66,14 +67,35 @@ class Client:
                 json_data = {}
                 text_data = await resp.text()
 
+            logger.bind(
+                response=resp,
+                status_code=resp.status,
+                status_reason=resp.reason,
+                raw_data=json_data or text_data,
+            ).debug("Got response from server")
+
             if response_model:
                 try:
                     model_resp = response_model.parse_obj(json_data)
-                except ValidationError as e:
-                    model_resp = None
-                    logger.bind(response=resp, data=json_data, error=e).warning(
-                        f"Failed to parse response as {response_model.__name__} {e}"
-                    )
+                except Exception as e:
+                    logger.bind(
+                        error=e,
+                        data=json_data or text_data,
+                        response=resp,
+                        model_name=response_model.__class__.__name__,
+                    ).warning(f"Failed to parse response as {response_model.__name__}")
+
+            if isinstance(model_resp, responses.ApiResponse):
+                model_resp = model_resp.__root__
+
+            logger.bind(
+                raw_data=json_data or text_data,
+                data=(
+                    model_resp.dict()
+                    if isinstance(model_resp, BaseModel)
+                    else model_resp
+                ),
+            ).debug("response parsed as {}".format(model_resp.__class__.__name__))
 
             if isinstance(model_resp, responses.Response) and not model_resp.success:
                 raise errors.RequestError(model_resp.message, model_resp.data)
@@ -147,7 +169,7 @@ class Client:
             f"{self.config.endpoint}/messages",
             *args,
             data=data,
-            response_model=responses.Response,
+            response_model=responses.ApiResponse,
             **kwargs,
         )
 
@@ -173,10 +195,9 @@ class Client:
                             reply=messages.interactive.ButtonRow(
                                 id=id,
                                 title=title,
-                                description=args[0] if args else None,
                             )
                         )
-                        for id, title, *args in buttons
+                        for id, title, *_ in buttons
                     ]
                 ),
             ),
@@ -222,7 +243,7 @@ class Client:
         self, to, type: str, media_id=None, media_link=None, *args, **kwargs
     ):
         try:
-            media = Media.parse_obj(
+            media = messages.Media.parse_obj(
                 {
                     "type": type,
                     "id": media_id,
@@ -231,7 +252,6 @@ class Client:
                     "filename": kwargs.pop("filename", None),
                 }
             )
-            logger.debug(f"{media}")
         except ValidationError:
             raise ValueError("Either media_id or media_link must be specified")
 
@@ -257,3 +277,21 @@ class Client:
         return await self.send_media(
             *args, type="document", filename=filename, **kwargs
         )
+
+    async def send_read_mark(self, message_id):
+        return await self.send(
+            data=messages.ReadMark(message_id=message_id),
+        )
+
+    async def get_media(self, media_id):
+        resp: responses.MediaResponse = await self._do_request(
+            "GET",
+            f"{self.config.media_endpoint or self.config.endpoint}/{media_id}",
+            response_model=responses.MediaResponse,
+        )
+        return resp
+
+    async def download_media(self, media_id) -> bytes:
+        resp: responses.MediaResponse = await self.get_media(media_id)
+        async with self.session.request("GET", resp.url) as response:
+            return await response.read()

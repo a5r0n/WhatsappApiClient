@@ -4,7 +4,12 @@ from whatsapp._models.media import Media
 from whatsapp._models.message import MessageType, Text
 
 from whatsapp._models.interactive import InteractiveList, InteractiveButtons
-
+from whatsapp._models.template import (
+    Template,
+    TemplateComponent,
+    TemplateParameter,
+    TemplateLanguage,
+)
 from whatsapp._models import interactive, media, message
 
 
@@ -23,6 +28,7 @@ class Message(BaseModel):
     audio: Optional[Media]
     document: Optional[Media]
     interactive: Optional[Union[InteractiveList, InteractiveButtons]]
+    template: Optional[Template]
 
     recipient_type: Optional[Literal["individual", "group"]] = Field(
         "individual",

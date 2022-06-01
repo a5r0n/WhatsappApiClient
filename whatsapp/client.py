@@ -1,5 +1,6 @@
 from dataclasses import field, dataclass
 from json import JSONDecodeError
+import json
 from typing import Dict, List, Tuple, Union
 
 from aiohttp import ClientSession
@@ -43,7 +44,7 @@ class Client:
         if data := kwargs.pop("data", {}):
             # TODO: use custom json encoder
             if isinstance(data, BaseModel):
-                kwargs["json"] = data.dict()
+                kwargs["json"] = json.loads(data.json(exclude_none=True))
                 data = None
 
         logger.debug(f"{method} {url} {kwargs}")

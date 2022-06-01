@@ -92,6 +92,7 @@ class Context(BaseModel):
 
 class Button(BaseModel):
     text: str
+    payload: Optional[str] = None
 
 
 class Message(BaseModel):

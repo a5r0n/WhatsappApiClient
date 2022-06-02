@@ -66,7 +66,7 @@ class GroupsResponse(Response):
 
 
 class UploadResponse(Response):
-    media: Optional[List[UploadedMedia]] = []
+    media: List[UploadedMedia]
 
     @property
     def media_id(self) -> Optional[str]:

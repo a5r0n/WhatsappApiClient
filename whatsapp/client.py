@@ -228,7 +228,7 @@ class Client:
         self, to, type: str, media_id=None, media_link=None, *args, **kwargs
     ):
         try:
-            media = Media.parse_obj(
+            media = messages.Media.parse_obj(
                 {
                     "type": type,
                     "id": media_id,
@@ -237,7 +237,6 @@ class Client:
                     "filename": kwargs.pop("filename", None),
                 }
             )
-            logger.debug(f"{media}")
         except ValidationError:
             raise ValueError("Either media_id or media_link must be specified")
 

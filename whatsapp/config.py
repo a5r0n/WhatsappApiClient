@@ -19,6 +19,7 @@ class DefaultsConfig(BaseModel):
 
 class WhatsAppConfig(DriConfig):
     endpoint: str
+    media_endpoint: Optional[str] = None
     wa_id: Optional[str] = None
     token: Optional[str] = None
 

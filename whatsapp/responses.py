@@ -75,6 +75,28 @@ class UploadResponse(Response):
 
 class MessageResponse(Response):
     success: bool = True
-    messaging_product: str
+    messaging_product: Literal["whatsapp"] = "whatsapp"
     contacts: List[Dict[str, str]]
     messages: List[Dict[str, str]]
+
+
+class MediaResponse(Response):
+    messaging_product: Literal["whatsapp"] = "whatsapp"
+    url: str
+    mime_type: str
+    sha256: str
+    file_size: str
+    id: str
+
+
+class ApiResponse(BaseModel):
+    __root__: Union[
+        MediaResponse,
+        LoginResponse,
+        LogoutResponse,
+        StatusResponse,
+        GroupsResponse,
+        MessageResponse,
+        UploadResponse,
+        Response,
+    ]

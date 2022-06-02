@@ -69,7 +69,7 @@ class Client:
 
             if response_model:
                 try:
-                    model_resp = response_model(**json_data)
+                    model_resp = response_model.parse_obj(json_data)
                 except Exception as e:
                     logger.bind(
                         error=e,
@@ -77,6 +77,9 @@ class Client:
                         response=resp,
                         model_name=response_model.__class__.__name__,
                     ).warning(f"Failed to parse response as {response_model.__name__}")
+
+            if isinstance(model_resp, responses.ApiResponse):
+                model_resp = model_resp.__root__
 
             if isinstance(model_resp, responses.Response) and not model_resp.success:
                 raise errors.RequestError(model_resp.message, model_resp.data)
@@ -150,7 +153,7 @@ class Client:
             f"{self.config.endpoint}/messages",
             *args,
             data=data,
-            response_model=responses.MessageResponse,
+            response_model=responses.ApiResponse,
             **kwargs,
         )
 
@@ -260,3 +263,21 @@ class Client:
         return await self.send_media(
             *args, type="document", filename=filename, **kwargs
         )
+
+    async def send_read_mark(self, message_id):
+        return await self.send(
+            data=messages.ReadMark(message_id=message_id),
+        )
+
+    async def get_media(self, media_id):
+        resp: responses.MediaResponse = await self._do_request(
+            "GET",
+            f"{self.config.media_endpoint or self.config.endpoint}/{media_id}",
+            response_model=responses.MediaResponse,
+        )
+        return resp
+
+    async def download_media(self, media_id) -> bytes:
+        resp: responses.MediaResponse = await self.get_media(media_id)
+        async with self.session.request("GET", resp.url) as response:
+            return await response.read()

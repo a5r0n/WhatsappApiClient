@@ -1,6 +1,5 @@
 from typing import Any, Dict, Literal, Optional, Union
 from pydantic import BaseModel, Field
-from whatsapp._models.media import Media
 from whatsapp._models.message import MessageType, Text
 
 from whatsapp._models.interactive import InteractiveList, InteractiveButtons
@@ -16,6 +15,19 @@ from whatsapp._models import interactive, media, message
 class AccountInfo(BaseModel):
     webhook_url: Optional[str]
     only_status_updates: Optional[bool] = False
+
+
+class ReadMark(BaseModel):
+    messaging_product: str = "whatsapp"
+    status: Literal["read"] = "read"
+    message_id: str
+
+
+class Media(BaseModel):
+    id: Optional[str]
+    link: Optional[str]
+    caption: Optional[str]
+    filename: Optional[str]
 
 
 class Message(BaseModel):

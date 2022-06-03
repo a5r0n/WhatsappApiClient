@@ -148,6 +148,15 @@ class Client:
         return resp
 
     @needs_login
+    async def contacts(self):
+        resp: responses.ContactsResponse = await self._do_request(
+            "GET",
+            f"{self.config.endpoint}/contacts",
+            response_model=responses.ContactsResponse,
+        )
+        return resp
+
+    @needs_login
     async def upload(self, data: bytes, mime_type: str) -> responses.UploadResponse:
         resp: responses.UploadResponse = await self._do_request(
             "POST",
@@ -157,6 +166,14 @@ class Client:
             headers={"Content-Type": mime_type},
         )
         return resp
+
+    @needs_login
+    async def delete_message(self, message_id, chat_id) -> responses.Response:
+        return await self._do_request(
+            "DELETE",
+            f"{self.config.endpoint}/messages/{message_id}/{chat_id}",
+            response_model=responses.ApiResponse,
+        )
 
     @needs_login
     async def send(self, *args, **kwargs) -> responses.Response:

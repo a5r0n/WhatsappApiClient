@@ -31,6 +31,19 @@ class Group(BaseModel):
     locked: bool = False
 
 
+class ContactInfo(BaseModel):
+    found: bool = Field(alias="Found")
+    first_name: Optional[str] = Field(alias="FirstName")
+    full_name: Optional[str] = Field(alias="FullName")
+    push_name: Optional[str] = Field(alias="PushName")
+    business_name: Optional[str] = Field(alias="BusinessName")
+
+
+class Contact(BaseModel):
+    id: int
+    info: ContactInfo
+
+
 class StatusData(BaseModel):
     status: Literal["init", "connected", "error"]
     id: str
@@ -88,6 +101,10 @@ class MediaResponse(Response):
     sha256: str
     file_size: str
     id: str
+
+
+class ContactsResponse(Response):
+    data: List[Contact]
 
 
 class ApiResponse(BaseModel):

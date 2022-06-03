@@ -132,6 +132,15 @@ class Client:
         return resp
 
     @needs_login
+    async def contacts(self):
+        resp: responses.ContactsResponse = await self._do_request(
+            "GET",
+            f"{self.config.endpoint}/contacts",
+            response_model=responses.ContactsResponse,
+        )
+        return resp
+
+    @needs_login
     async def upload(self, data: bytes, mime_type: str) -> responses.UploadResponse:
         resp: responses.UploadResponse = await self._do_request(
             "POST",

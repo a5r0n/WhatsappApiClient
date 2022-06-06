@@ -94,6 +94,7 @@ class MessageResponse(Response):
 
 
 class MediaResponse(Response):
+    success: bool = True
     messaging_product: Literal["whatsapp"] = "whatsapp"
     url: str
     mime_type: str

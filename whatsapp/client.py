@@ -67,6 +67,13 @@ class Client:
                 json_data = {}
                 text_data = await resp.text()
 
+            logger.bind(
+                response=resp,
+                status_code=resp.status,
+                status_reason=resp.reason,
+                raw_data=json_data or text_data,
+            ).debug("Got response from server")
+
             if response_model:
                 try:
                     model_resp = response_model.parse_obj(json_data)
@@ -80,6 +87,15 @@ class Client:
 
             if isinstance(model_resp, responses.ApiResponse):
                 model_resp = model_resp.__root__
+
+            logger.bind(
+                raw_data=json_data or text_data,
+                data=(
+                    model_resp.dict()
+                    if isinstance(model_resp, BaseModel)
+                    else model_resp
+                ),
+            ).debug("response parsed as {}".format(model_resp.__class__.__name__))
 
             if isinstance(model_resp, responses.Response) and not model_resp.success:
                 raise errors.RequestError(model_resp.message, model_resp.data)

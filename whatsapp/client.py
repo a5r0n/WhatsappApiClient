@@ -168,6 +168,14 @@ class Client:
         return resp
 
     @needs_login
+    async def delete_message(self, message_id, chat_id) -> responses.Response:
+        return await self._do_request(
+            "DELETE",
+            f"{self.config.endpoint}/messages/{message_id}/{chat_id}",
+            response_model=responses.ApiResponse,
+        )
+
+    @needs_login
     async def send(self, *args, **kwargs) -> responses.Response:
         data = kwargs.pop("data", None)
         if isinstance(data, messages.Message) and data.preview_url is None:

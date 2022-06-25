@@ -78,6 +78,7 @@ class Status(BaseModel):
     conversation: Optional[Conversation] = None
     pricing: Optional[Pricing] = None
     recipient_id: str
+    chat_id: Optional[str]
     status: str
     timestamp: str
 

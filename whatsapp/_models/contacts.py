@@ -38,9 +38,9 @@ class Org(BaseModel):
 class Location(BaseModel):
     longitude: str = Field(..., description="Longitude of the location")
     latitude: str = Field(..., description="Latitude of the location")
-    name: str = Field(..., description="Name of the location")
-    address: str = Field(
-        ..., description="Address of the location. Only displayed if name is present."
+    name: Optional[str] = Field(None, description="Name of the location")
+    address: Optional[str] = Field(
+        None, description="Address of the location. Only displayed if name is present."
     )
 
 

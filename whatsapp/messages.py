@@ -29,6 +29,7 @@ class Media(BaseModel):
     link: Optional[str]
     caption: Optional[str]
     filename: Optional[str]
+    thumbnail: Optional[media.Thumbnail]
 
 
 class Message(BaseModel):

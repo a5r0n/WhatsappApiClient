@@ -148,6 +148,16 @@ class Client:
         return resp
 
     @needs_login
+    async def refresh(self, force: bool = False):
+        resp: responses.ApiResponse = await self._do_request(
+            "POST",
+            f"{self.config.endpoint}/refresh",
+            params={"force": "true" if force else "false"},
+            response_model=responses.ApiResponse,
+        )
+        return resp
+
+    @needs_login
     async def contacts(self):
         resp: responses.ContactsResponse = await self._do_request(
             "GET",

@@ -15,14 +15,11 @@ class MediaTypes(str, Enum):
 
 class Thumbnail(BaseModel):
     link: Optional[str]
-    data: Optional[bytes]
-
-    class Config:
-        json_encoders = {bytes: lambda v: base64.b64encode(v).decode()}
+    data: Optional[str] = Field(None, description="base64 encoded image data")
 
     @root_validator(pre=True)
     def validate_link_or_data(cls, values):
-        if values.get("data") and not values.get("link"):
+        if not values.get("data") and not values.get("link"):
             raise ValueError("Either link or data must be provided")
 
         return values

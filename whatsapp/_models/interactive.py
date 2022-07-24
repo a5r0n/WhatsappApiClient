@@ -34,7 +34,6 @@ class Header(BaseModel):
 class Row(BaseModel):
     id: str
     title: str
-    description: Optional[constr(max_length=72)]
 
 
 class ButtonRow(Row):
@@ -43,6 +42,7 @@ class ButtonRow(Row):
 
 class SectionRow(Row):
     title: constr(max_length=23)
+    description: Optional[constr(max_length=72)]
 
 
 class Button(BaseModel):

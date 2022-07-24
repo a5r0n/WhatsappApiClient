@@ -222,10 +222,9 @@ class Client:
                             reply=messages.interactive.ButtonRow(
                                 id=id,
                                 title=title,
-                                description=args[0] if args else None,
                             )
                         )
-                        for id, title, *args in buttons
+                        for id, title, *_ in buttons
                     ]
                 ),
             ),

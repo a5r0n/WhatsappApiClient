@@ -11,6 +11,7 @@ class MessageType(str, Enum):
     AUDIO = "audio"
     DOCUMENT = "document"
     INTERACTIVE = "interactive"
+    TEMPLATE = "template"
 
 
 class TextFont(str, Enum):

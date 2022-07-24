@@ -1,3 +1,4 @@
+import base64
 from enum import Enum
 from typing import Literal, Optional, Union
 
@@ -12,13 +13,25 @@ class MediaTypes(str, Enum):
     STICKER = "sticker"
 
 
+class Thumbnail(BaseModel):
+    link: Optional[str]
+    data: Optional[str] = Field(None, description="base64 encoded image data")
+
+    @root_validator(pre=True)
+    def validate_link_or_data(cls, values):
+        if not values.get("data") and not values.get("link"):
+            raise ValueError("Either link or data must be provided")
+
+        return values
+
+
 class BaseMedia(BaseModel):
-    type: MediaTypes
     id: Optional[str]
     link: Optional[str]
     caption: Optional[str]
     filename: Optional[str]
     provider: Optional[str]
+    thumbnail: Optional[Thumbnail]
 
     @root_validator
     def validate_one_of_sources(cls, values: dict):
@@ -33,22 +46,18 @@ class BaseMedia(BaseModel):
 
 
 class ImageById(BaseMedia):
-    type = MediaTypes.IMAGE
     id: str
 
 
 class AudioById(BaseMedia):
-    type = MediaTypes.AUDIO
     id: str
 
 
 class VideoById(BaseMedia):
-    type = MediaTypes.VIDEO
     id: str
 
 
 class DocumentById(BaseMedia):
-    type = MediaTypes.DOCUMENT
     id: str
     filename: str
 
@@ -61,22 +70,18 @@ class Provider(BaseModel):
 
 
 class ImageByProvider(BaseMedia):
-    type = MediaTypes.IMAGE
     link: str
 
 
 class AudioByProvider(BaseMedia):
-    type = MediaTypes.AUDIO
     link: str
 
 
 class VideoByProvider(BaseMedia):
-    type = MediaTypes.VIDEO
     link: str
 
 
 class DocumentByProvider(BaseMedia):
-    type = MediaTypes.DOCUMENT
     link: str
     filename: str
 

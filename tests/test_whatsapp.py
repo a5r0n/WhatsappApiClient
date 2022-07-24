@@ -7,6 +7,7 @@ from whatsapp import __version__
 import pytest
 from whatsapp import WhatsAppClient, WhatsAppConfig
 from whatsapp import messages
+from whatsapp.responses import Group, Contact
 
 import os
 
@@ -164,6 +165,25 @@ async def test_login(logged_out_client: WhatsAppClient):
     assert logged_out_client.config.token is None
     assert not logged_out_client.config.is_logged_in
     assert await logged_out_client.login()
+
+
+@pytest.mark.asyncio
+async def test_groups_list(client: WhatsAppClient):
+    resp = await client.groups()
+    assert len(resp.data) > 0
+    assert isinstance(resp.data, list)
+    assert isinstance(resp.data[0], Group)
+    assert resp.data[0].id is not None
+    assert resp.data[0].name is not None
+
+@pytest.mark.asyncio
+async def test_contacts_list(client: WhatsAppClient):
+    resp = await client.contacts()
+    assert len(resp.data) > 0
+    assert isinstance(resp.data, list)
+    assert isinstance(resp.data[0], Contact)
+    assert resp.data[0].id is not None
+    assert resp.data[0].info is not None
 
 
 @pytest.mark.asyncio

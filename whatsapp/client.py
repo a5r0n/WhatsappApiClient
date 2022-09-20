@@ -186,7 +186,7 @@ class Client:
         )
 
     @needs_login
-    async def send(self, *args, **kwargs) -> responses.Response:
+    async def send(self, *args, **kwargs) -> responses.AnyResponse:
         data = kwargs.pop("data", None)
         if isinstance(data, messages.Message) and data.preview_url is None:
             data.preview_url = self.config.defaults.preview_url

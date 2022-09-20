@@ -107,14 +107,17 @@ class ContactsResponse(Response):
     data: List[Contact]
 
 
+AnyResponse = Union[
+    MediaResponse,
+    LoginResponse,
+    LogoutResponse,
+    StatusResponse,
+    GroupsResponse,
+    MessageResponse,
+    UploadResponse,
+    Response,
+]
+
+
 class ApiResponse(BaseModel):
-    __root__: Union[
-        MediaResponse,
-        LoginResponse,
-        LogoutResponse,
-        StatusResponse,
-        GroupsResponse,
-        MessageResponse,
-        UploadResponse,
-        Response,
-    ]
+    __root__: AnyResponse

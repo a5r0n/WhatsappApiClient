@@ -1,3 +1,9 @@
+## v0.7.0 (2022-12-25)
+
+### Feat
+
+- support reaction messages
+
 ## v0.6.0 (2022-12-25)
 
 ### Feat

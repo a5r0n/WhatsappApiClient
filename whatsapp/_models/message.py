@@ -13,6 +13,7 @@ class MessageType(str, Enum):
     INTERACTIVE = "interactive"
     TEMPLATE = "template"
     CONTACTS = "contacts"
+    REACTION = "reaction"
 
 
 class TextFont(str, Enum):

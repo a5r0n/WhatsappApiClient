@@ -4,6 +4,7 @@ from whatsapp._models.contacts import Contact, Contacts
 from whatsapp._models.message import MessageType, Text
 
 from whatsapp._models.interactive import InteractiveList, InteractiveButtons
+from whatsapp._models.reaction import Reaction
 from whatsapp._models.template import (
     Template,
     TemplateComponent,
@@ -44,7 +45,7 @@ class Message(BaseModel):
     contacts: Optional[List[Contact]]
     interactive: Optional[Union[InteractiveList, InteractiveButtons]]
     template: Optional[Template]
-
+    reaction: Optional[Reaction]
     recipient_type: Optional[Literal["individual", "group"]] = Field(
         "individual",
         description="Determines whether the recipient is an individual or a group\nSpecifying recipient_type in the request is optional when the value is individual.\nHowever, recipient_type is required when using group. If sending a text message to a group, see the Sending Group Messages documentation.",

@@ -1,3 +1,16 @@
+## v0.6.0 (2022-12-25)
+
+### Feat
+
+- allow passing Thumbnail to media
+- Add delete message and contacts method
+- support official WhatsApp CloudAPI
+
+### Fix
+
+- **responses**: client.send return AnyResponse
+- support for python ^3.7
+
 ## v0.5.1 (2022-05-29)
 
 ### Fix

@@ -1,10 +1,15 @@
-from typing import Any, Dict, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 from pydantic import BaseModel, Field
-from whatsapp._models.media import Media
+from whatsapp._models.contacts import Contact, Contacts
 from whatsapp._models.message import MessageType, Text
 
 from whatsapp._models.interactive import InteractiveList, InteractiveButtons
-
+from whatsapp._models.template import (
+    Template,
+    TemplateComponent,
+    TemplateParameter,
+    TemplateLanguage,
+)
 from whatsapp._models import interactive, media, message
 
 
@@ -13,7 +18,22 @@ class AccountInfo(BaseModel):
     only_status_updates: Optional[bool] = False
 
 
+class ReadMark(BaseModel):
+    messaging_product: str = "whatsapp"
+    status: Literal["read"] = "read"
+    message_id: str
+
+
+class Media(BaseModel):
+    id: Optional[str]
+    link: Optional[str]
+    caption: Optional[str]
+    filename: Optional[str]
+    thumbnail: Optional[media.Thumbnail]
+
+
 class Message(BaseModel):
+    messaging_product: str = "whatsapp"
     type: MessageType
     to: str
     text: Optional[Text]
@@ -21,7 +41,9 @@ class Message(BaseModel):
     video: Optional[Media]
     audio: Optional[Media]
     document: Optional[Media]
+    contacts: Optional[List[Contact]]
     interactive: Optional[Union[InteractiveList, InteractiveButtons]]
+    template: Optional[Template]
 
     recipient_type: Optional[Literal["individual", "group"]] = Field(
         "individual",

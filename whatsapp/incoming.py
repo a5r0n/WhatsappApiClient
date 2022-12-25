@@ -73,13 +73,20 @@ class Pricing(BaseModel):
     pricing_model: str
 
 
+class StatusError(BaseModel):
+    code: int
+    title: Optional[str]
+
+
 class Status(BaseModel):
     id: str
     conversation: Optional[Conversation] = None
     pricing: Optional[Pricing] = None
     recipient_id: str
+    chat_id: Optional[str]
     status: str
     timestamp: str
+    errors: Optional[List[StatusError]] = None
 
 
 class Context(BaseModel):
@@ -92,6 +99,7 @@ class Context(BaseModel):
 
 class Button(BaseModel):
     text: str
+    payload: Optional[str] = None
 
 
 class Message(BaseModel):

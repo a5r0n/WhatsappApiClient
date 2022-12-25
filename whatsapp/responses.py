@@ -31,6 +31,19 @@ class Group(BaseModel):
     locked: bool = False
 
 
+class ContactInfo(BaseModel):
+    found: bool = Field(alias="Found")
+    first_name: Optional[str] = Field(alias="FirstName")
+    full_name: Optional[str] = Field(alias="FullName")
+    push_name: Optional[str] = Field(alias="PushName")
+    business_name: Optional[str] = Field(alias="BusinessName")
+
+
+class Contact(BaseModel):
+    id: int
+    info: ContactInfo
+
+
 class StatusData(BaseModel):
     status: Literal["init", "connected", "error"]
     id: str
@@ -66,8 +79,45 @@ class GroupsResponse(Response):
 
 
 class UploadResponse(Response):
-    media: Optional[List[UploadedMedia]] = []
+    media: List[UploadedMedia]
 
     @property
     def media_id(self) -> Optional[str]:
         return self.media[0].id if self.media else None
+
+
+class MessageResponse(Response):
+    success: bool = True
+    messaging_product: Literal["whatsapp"] = "whatsapp"
+    contacts: List[Dict[str, str]]
+    messages: List[Dict[str, str]]
+
+
+class MediaResponse(Response):
+    success: bool = True
+    messaging_product: Literal["whatsapp"] = "whatsapp"
+    url: str
+    mime_type: str
+    sha256: str
+    file_size: str
+    id: str
+
+
+class ContactsResponse(Response):
+    data: List[Contact]
+
+
+AnyResponse = Union[
+    MediaResponse,
+    LoginResponse,
+    LogoutResponse,
+    StatusResponse,
+    GroupsResponse,
+    MessageResponse,
+    UploadResponse,
+    Response,
+]
+
+
+class ApiResponse(BaseModel):
+    __root__: AnyResponse

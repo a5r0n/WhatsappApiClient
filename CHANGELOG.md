@@ -1,3 +1,9 @@
+## v0.7.2 (2022-12-25)
+
+### Feat
+
+- Add support for replying to user message
+
 ## v0.7.1 (2022-12-25)
 
 ## v0.7.0 (2022-12-25)

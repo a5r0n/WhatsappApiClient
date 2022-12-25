@@ -1,7 +1,7 @@
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class Reaction(BaseModel):
     message_id: str
-    emoji: Optional[str] = Field(None, alias="reaction")
+    emoji: Optional[str] = None

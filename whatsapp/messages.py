@@ -33,10 +33,15 @@ class Media(BaseModel):
     thumbnail: Optional[media.Thumbnail]
 
 
+class Context(BaseModel):
+    message_id: str
+
+
 class Message(BaseModel):
     messaging_product: str = "whatsapp"
     type: MessageType
     to: str
+    context: Optional[Context]
     text: Optional[Text]
     image: Optional[Media]
     video: Optional[Media]

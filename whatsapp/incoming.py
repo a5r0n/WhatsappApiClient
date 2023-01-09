@@ -80,11 +80,17 @@ class StatusError(BaseModel):
     title: Optional[str]
 
 
+class StatusMessage(BaseModel):
+    recipient_id: Optional[str]
+    group_id: Optional[str]
+
+
 class Status(BaseModel):
     id: str
     conversation: Optional[Conversation] = None
     pricing: Optional[Pricing] = None
-    recipient_id: str
+    recipient_id: Optional[str]
+    message: Optional[StatusMessage]
     chat_id: Optional[str]
     status: str
     timestamp: str

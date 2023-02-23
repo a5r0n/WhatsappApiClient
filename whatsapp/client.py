@@ -218,8 +218,8 @@ class Client:
         to: str,
         text: str,
         buttons: List[Tuple[str, str]],
-        header: Optional[Header] = None,
-        footer: Optional[Text] = None,
+        header: Optional["Header"] = None,
+        footer: Optional["Text"] = None,
     ):
         message = messages.Message(
             to=to,
@@ -250,8 +250,8 @@ class Client:
         title: str,
         buttons: List[Tuple[str, str]],
         button: str = None,
-        header: Optional[Header] = None,
-        footer: Optional[Text] = None,
+        header: Optional["Header"] = None,
+        footer: Optional["Text"] = None,
     ):
         button = button or title
 

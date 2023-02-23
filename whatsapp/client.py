@@ -1,7 +1,7 @@
 from dataclasses import field, dataclass
 from json import JSONDecodeError
 import json
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Optional, TYPE_CHECKING
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ContentTypeError
@@ -13,6 +13,9 @@ from whatsapp._models.media import Media, MediaTypes
 
 from .config import WhatsAppConfig
 from .utils import needs_login
+
+if TYPE_CHECKING:
+    from ._models.interactive import Header, Text
 
 
 @dataclass
@@ -210,12 +213,21 @@ class Client:
         )
         return await self.send(data=message, *args, **kwargs)
 
-    async def send_buttons(self, to: str, text: str, buttons: List[Tuple[str, str]]):
+    async def send_buttons(
+        self,
+        to: str,
+        text: str,
+        buttons: List[Tuple[str, str]],
+        header: Optional[Header] = None,
+        footer: Optional[Text] = None,
+    ):
         message = messages.Message(
             to=to,
             type=messages.MessageType.INTERACTIVE,
             interactive=messages.interactive.InteractiveButtons(
                 body=messages.interactive.Text(text=text),
+                header=header,
+                footer=footer,
                 action=messages.interactive.ButtonsAction(
                     buttons=[
                         messages.interactive.Button(
@@ -238,6 +250,8 @@ class Client:
         title: str,
         buttons: List[Tuple[str, str]],
         button: str = None,
+        header: Optional[Header] = None,
+        footer: Optional[Text] = None,
     ):
         button = button or title
 
@@ -246,6 +260,8 @@ class Client:
             type=messages.MessageType.INTERACTIVE,
             interactive=messages.interactive.InteractiveList(
                 body=messages.interactive.Text(text=text),
+                header=header,
+                footer=footer,
                 action=messages.interactive.ListAction(
                     button=button,
                     sections=[

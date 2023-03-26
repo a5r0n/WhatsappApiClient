@@ -17,6 +17,11 @@ class Account(BaseModel):
     image: str
 
 
+class Privacy(BaseModel):
+    type_: Literal["contacts", "blacklist", "whitelist"] = Field(alias="type")
+    list_: Optional[List[int]] = Field(None, alias="list")
+
+
 class Group(BaseModel):
     id: str
     name: str
@@ -70,6 +75,10 @@ class LogoutResponse(Response):
     data: None
 
 
+class PrivacyResponse(Response):
+    data: Privacy
+
+
 class StatusResponse(Response):
     data: Optional[StatusData] = None
 
@@ -108,6 +117,7 @@ class ContactsResponse(Response):
 
 
 AnyResponse = Union[
+    PrivacyResponse,
     MediaResponse,
     LoginResponse,
     LogoutResponse,

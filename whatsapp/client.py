@@ -151,6 +151,15 @@ class Client:
         return resp
 
     @needs_login
+    async def privacy(self):
+        resp: responses.PrivacyResponse = await self._do_request(
+            "GET",
+            f"{self.config.endpoint}/profile/privacy",
+            response_model=responses.PrivacyResponse,
+        )
+        return resp
+
+    @needs_login
     async def refresh(self, force: bool = False):
         resp: responses.ApiResponse = await self._do_request(
             "POST",

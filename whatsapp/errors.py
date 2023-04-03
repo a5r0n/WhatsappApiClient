@@ -1,3 +1,6 @@
+from typing import Any
+
+
 class WhatsappError(Exception):
     pass
 
@@ -11,4 +14,8 @@ class NotLoggedInError(WhatsappError):
 
 
 class RequestError(WhatsappError):
-    pass
+    def __init__(self, status: int, reason: str, message: str, data: Any):
+        self.status = status
+        self.reason = reason
+        self.message = message
+        self.data = data

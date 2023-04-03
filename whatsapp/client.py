@@ -101,7 +101,9 @@ class Client:
             ).debug("response parsed as {}".format(model_resp.__class__.__name__))
 
             if isinstance(model_resp, responses.Response) and not model_resp.success:
-                raise errors.RequestError(model_resp.message, model_resp.data)
+                raise errors.RequestError(
+                    resp.status, resp.reason, model_resp.message, model_resp.data
+                )
 
             resp.raise_for_status()
             return model_resp or json_data or text_data

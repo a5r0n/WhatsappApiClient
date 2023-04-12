@@ -50,7 +50,7 @@ class Client:
                 kwargs["json"] = json.loads(data.json(exclude_none=True))
                 data = None
 
-        logger.debug(f"{method} {url} {kwargs}")
+        logger.debug(f"{method} {url} {list(kwargs.keys()) if kwargs else ''}")
 
         async with self.session.request(method, url, **kwargs, data=data) as resp:
             model_resp: BaseModel = None
@@ -64,17 +64,23 @@ class Client:
                 try:
                     model_resp = response_model.parse_raw(text_data)
                 except Exception as e:
-                    logger.warning(f"Failed to parse response: {text_data} {e}")
+                    logger.warning(f"Failed to parse response: {text_data[:5000]} {e}")
             except JSONDecodeError:
                 # TODO: some logging
                 json_data = {}
                 text_data = await resp.text()
 
+            data_to_log = (
+                (json_data or text_data)
+                if len(str(json_data or text_data)) < 1000
+                else "too long to log"
+            )
+
             logger.bind(
                 response=resp,
                 status_code=resp.status,
                 status_reason=resp.reason,
-                raw_data=json_data or text_data,
+                raw_data=data_to_log,
             ).debug("Got response from server")
 
             if response_model:
@@ -92,7 +98,7 @@ class Client:
                 model_resp = model_resp.__root__
 
             logger.bind(
-                raw_data=json_data or text_data,
+                raw_data=data_to_log,
                 data=(
                     model_resp.dict()
                     if isinstance(model_resp, BaseModel)

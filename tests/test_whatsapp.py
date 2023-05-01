@@ -176,6 +176,7 @@ async def test_groups_list(client: WhatsAppClient):
     assert resp.data[0].id is not None
     assert resp.data[0].name is not None
 
+
 @pytest.mark.asyncio
 async def test_contacts_list(client: WhatsAppClient):
     resp = await client.contacts()
@@ -354,3 +355,14 @@ async def test_send_video_url(
     client: WhatsAppClient, to: str, video_url: str, caption: str
 ):
     resp = await client.send_video(to, media_link=video_url, caption=caption)
+
+
+@pytest.mark.asyncio
+async def test_upload_file(client: WhatsAppClient, document_path: str):
+    with open(document_path, "rb") as f:
+        resp = await client.upload_file(
+            f.read(), mimetypes.guess_type(document_path)[0]
+        )
+
+    media_id = resp.id
+    assert media_id is not None

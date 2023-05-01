@@ -1,9 +1,10 @@
 from dataclasses import field, dataclass
+import io
 from json import JSONDecodeError
 import json
 from typing import Dict, List, Tuple, Union, Optional, TYPE_CHECKING
 
-from aiohttp import ClientSession
+from aiohttp import ClientSession, FormData, MultipartWriter
 from aiohttp.client_exceptions import ContentTypeError
 from loguru import logger
 from pydantic import BaseModel, ValidationError
@@ -194,6 +195,19 @@ class Client:
             data=data,
             response_model=responses.UploadResponse,
             headers={"Content-Type": mime_type},
+        )
+        return resp
+
+    @needs_login
+    async def upload_file(self, data: bytes, mime_type: str) -> responses.UploadedMedia:
+        form: FormData = FormData()
+        form.add_field("file", data, content_type=mime_type)
+
+        resp: responses.UploadResponse = await self._do_request(
+            "POST",
+            f"{self.config.endpoint}/media?messaging_product=whatsapp",
+            data=form,
+            response_model=responses.UploadResponse,
         )
         return resp
 

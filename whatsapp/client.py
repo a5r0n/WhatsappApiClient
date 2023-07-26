@@ -221,11 +221,15 @@ class Client:
         return resp
 
     @needs_login
-    async def delete_message(self, message_id, chat_id) -> responses.Response:
+    async def delete_message(
+        self, message_id, chat_id, *args, **kwargs
+    ) -> responses.Response:
         return await self._do_request(
             "DELETE",
             f"{self.config.endpoint}/messages/{message_id}/{chat_id}",
             response_model=responses.ApiResponse,
+            *args,
+            **kwargs,
         )
 
     @needs_login

@@ -116,6 +116,10 @@ class ContactsResponse(Response):
     data: List[Contact]
 
 
+class PairCodeResponse(Response):
+    data: str
+
+
 AnyResponse = Union[
     PrivacyResponse,
     MediaResponse,

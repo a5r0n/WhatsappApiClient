@@ -132,6 +132,15 @@ class Client:
             self.__post_init__()
             return resp
 
+    async def pair_with_code(self, phone: str):
+        resp: responses.PairCodeResponse = await self._do_request(
+            "GET",
+            f"{self.config.endpoint}/accounts/code",
+            params={"phone": phone},
+            response_model=responses.PairCodeResponse,
+        )
+        return resp
+
     @needs_login
     async def logout(self):
         resp: responses.LogoutResponse = await self._do_request(

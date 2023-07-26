@@ -1,3 +1,45 @@
+## v0.9.0 (2023-07-26)
+
+### Feat
+
+- **client**: Add pair_with_code method
+- Add upload_file method
+- Add status privacy method
+
+### Fix
+
+- pass *args, **kwargs in delete_message method
+- don't log data when is too long (1000)
+- better error handling
+
+## v0.8.2 (2023-05-01)
+
+### Fix
+
+- **deps**: upgrade loguru dependency from version 0.6.0 to 0.7.0
+
+## v0.8.1 (2023-02-23)
+
+### Fix
+
+- typo in client send_list & send_buttons typing
+
+## v0.8.0 (2023-02-23)
+
+### Feat
+
+- Add header & footer for send_list & send_buttons
+
+### Fix
+
+- support whatsapp v2.45 api
+
+## v0.7.3 (2022-12-25)
+
+### Fix
+
+- fix reactions - emoji key typo
+
 ## v0.7.2 (2022-12-25)
 
 ### Feat

@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from whatsapp._models.message import Text
 from whatsapp._models.contacts import Contacts, Location
 from whatsapp._models.reaction import Reaction
+from whatsapp._models.system import System
 
 
 class IncomingMessageType(str, Enum):
@@ -22,6 +23,7 @@ class IncomingMessageType(str, Enum):
     BUTTON = "button"
     UNKNOWN = "unknown"
     REACTION = "reaction"
+    SYSTEM = "system"
 
 
 class Reply(BaseModel):
@@ -130,6 +132,7 @@ class Message(BaseModel):
     button: Optional[Button]
     location: Optional[Location]
     reaction: Optional[Reaction]
+    system: Optional[System]
 
     class Config:
         use_enum_values = True

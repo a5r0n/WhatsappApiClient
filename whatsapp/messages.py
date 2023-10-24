@@ -3,7 +3,11 @@ from pydantic import BaseModel, Field
 from whatsapp._models.contacts import Contact, Contacts
 from whatsapp._models.message import MessageType, Text
 
-from whatsapp._models.interactive import InteractiveList, InteractiveButtons
+from whatsapp._models.interactive import (
+    InteractiveList,
+    InteractiveButtons,
+    InteractiveFlow,
+)
 from whatsapp._models.reaction import Reaction
 from whatsapp._models.template import (
     Template,
@@ -48,7 +52,7 @@ class Message(BaseModel):
     audio: Optional[Media]
     document: Optional[Media]
     contacts: Optional[List[Contact]]
-    interactive: Optional[Union[InteractiveList, InteractiveButtons]]
+    interactive: Optional[Union[InteractiveList, InteractiveButtons, InteractiveFlow]]
     template: Optional[Template]
     reaction: Optional[Reaction]
     recipient_type: Optional[Literal["individual", "group"]] = Field(

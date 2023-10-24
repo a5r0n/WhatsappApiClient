@@ -36,9 +36,23 @@ class DateTime(BaseModel):
     )
 
 
+class Action(BaseModel):
+    """Action is a special type of parameter that is used to define a button action for flows."""
+
+    flow_token: Optional[str]
+    flow_action_data: Optional[Dict[str, Any]]
+
+
 class TemplateParameter(BaseModel):
     type: Literal[
-        "text", "currency", "date_time", "image", "document", "video", "payload"
+        "text",
+        "currency",
+        "date_time",
+        "image",
+        "document",
+        "video",
+        "payload",
+        "action",
     ]
     text: Optional[str]
     image: Optional[Media]
@@ -47,11 +61,12 @@ class TemplateParameter(BaseModel):
     currency: Optional[Currency]
     date_time: Optional[DateTime]
     payload: Optional[str]
+    action: Optional[Action]
 
 
 class TemplateComponent(BaseModel):
     type: TemplateComponentType
-    sub_type: Optional[Literal["quick_reply", "url"]]
+    sub_type: Optional[Literal["quick_reply", "url", "flow"]]
     index: Optional[int]
     parameters: Optional[List[TemplateParameter]]
 

@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 import uuid
 
-from pydantic import BaseModel, Field, constr, root_validator
+from pydantic import BaseModel, Field, conlist, constr, root_validator, validator
 from .media import Media
 
 
@@ -27,10 +27,15 @@ class Text(BaseModel):
 
 class Header(BaseModel):
     type: HeaderTypes
-    text: Optional[Text]
+    text: Optional[Union[Text, str]]
     video: Optional[Media]
     image: Optional[Media]
     document: Optional[Media]
+
+
+class TextHeader(Header):
+    type: Literal[HeaderTypes.TEXT] = HeaderTypes.TEXT
+    text: str
 
 
 class Row(BaseModel):
@@ -47,13 +52,22 @@ class SectionRow(Row):
     description: Optional[constr(max_length=72)]
 
 
+class ProductItem(BaseModel):
+    product_retailer_id: str
+
+
 class Button(BaseModel):
     type: str = "reply"
     reply: ButtonRow
 
 
 class Section(BaseModel):
-    title: str
+    title: Optional[str]
+    rows: Optional[List[SectionRow]]
+    product_items: Optional[List[ProductItem]]
+
+
+class ListSection(Section):
     rows: List[SectionRow]
 
 
@@ -86,11 +100,28 @@ class Parameters(BaseModel):
         return values
 
 
+class ProductSection(Section):
+    product_items: List[ProductItem]
+
+
 class Action(BaseModel):
     button: Optional[Button]
     buttons: Optional[List[Button]]
     sections: Optional[List[Section]]
     parameters: Optional[Parameters]
+    catalog_id: Optional[str]
+    product_retailer_id: Optional[str]
+
+    @validator("sections", always=True)
+    def sections_may_need_title(cls, v, values):
+        if v and len(v) > 1:
+            for section in v:
+                if not section.title:
+                    raise ValueError(
+                        "All sections must have a title if there are more than one section"
+                    )
+
+        return v
 
 
 class ListAction(Action):
@@ -107,15 +138,36 @@ class FlowAction(Action):
     parameters: Parameters
 
 
+class ProductAction(Action):
+    catalog_id: str
+    product_retailer_id: str
+
+
+class ProductListAction(Action):
+    catalog_id: str
+    sections: conlist(ProductSection, min_items=1)
+
+
 class Interactive(BaseModel):
     type: InteractiveTypes
     body: Text
     footer: Optional[Text]
     header: Optional[Header]
-    action: Union[ListAction, ButtonsAction, FlowAction]
+    action: Union[
+        ListAction, ButtonsAction, FlowAction, ProductListAction, ProductAction
+    ]
 
     class Config:
         use_enum_values = True
+
+    @root_validator
+    def must_have_header_for_product_list(cls, values):
+        if values.get("type") == InteractiveTypes.PRODUCT_LIST and not values.get(
+            "header"
+        ):
+            raise ValueError("Header is required for product list")
+
+        return values
 
 
 class InteractiveList(Interactive):
@@ -131,3 +183,15 @@ class InteractiveButtons(Interactive):
 class InteractiveFlow(Interactive):
     type: InteractiveTypes = InteractiveTypes.FLOW
     action: FlowAction
+
+
+class InteractiveProduct(Interactive):
+    type: InteractiveTypes = InteractiveTypes.PRODUCT
+    header: Literal[None] = None
+    action: ProductAction
+
+
+class InteractiveProductList(Interactive):
+    type: InteractiveTypes = InteractiveTypes.PRODUCT_LIST
+    header: TextHeader
+    action: ProductListAction

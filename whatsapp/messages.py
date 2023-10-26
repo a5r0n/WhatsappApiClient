@@ -7,6 +7,8 @@ from whatsapp._models.interactive import (
     InteractiveList,
     InteractiveButtons,
     InteractiveFlow,
+    InteractiveProduct,
+    InteractiveProductList,
 )
 from whatsapp._models.reaction import Reaction
 from whatsapp._models.template import (
@@ -52,7 +54,15 @@ class Message(BaseModel):
     audio: Optional[Media]
     document: Optional[Media]
     contacts: Optional[List[Contact]]
-    interactive: Optional[Union[InteractiveList, InteractiveButtons, InteractiveFlow]]
+    interactive: Optional[
+        Union[
+            InteractiveList,
+            InteractiveButtons,
+            InteractiveFlow,
+            InteractiveProduct,
+            InteractiveProductList,
+        ]
+    ]
     template: Optional[Template]
     reaction: Optional[Reaction]
     recipient_type: Optional[Literal["individual", "group"]] = Field(

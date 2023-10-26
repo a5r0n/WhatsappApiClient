@@ -1,3 +1,9 @@
+## v0.10.2 (2023-10-26)
+
+### Fix
+
+- **deps**: Upgrade python dependencies
+
 ## v0.10.1 (2023-10-26)
 
 ### Fix

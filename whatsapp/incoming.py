@@ -25,6 +25,7 @@ class IncomingMessageType(str, Enum):
     UNKNOWN = "unknown"
     REACTION = "reaction"
     SYSTEM = "system"
+    ORDER = "order"
 
 
 class Reply(BaseModel):
@@ -49,6 +50,19 @@ class Interactive(BaseModel):
     button_reply: Optional[Reply] = None
     list_reply: Optional[Reply] = None
     nfm_reply: Optional[FlowReplay] = None
+
+
+class OrderProductItem(BaseModel):
+    product_retailer_id: str
+    quantity: Union[float, str]
+    item_price: Union[float, str]
+    currency: str
+
+
+class Order(BaseModel):
+    catalog_id: str
+    text: Optional[str]
+    product_items: List[OrderProductItem]
 
 
 class Media(BaseModel):
@@ -112,9 +126,15 @@ class Status(BaseModel):
     errors: Optional[List[StatusError]] = None
 
 
+class ReferredProduct(BaseModel):
+    catalog_id: str
+    product_retailer_id: str
+
+
 class Context(BaseModel):
     id: Optional[str] = None
     from_: Optional[str] = Field(None, alias="from")
+    referred_product: Optional[ReferredProduct] = None
     forwarded: Optional[bool] = False
     group_id: Optional[str] = None
     mentions: Optional[List[str]] = None
@@ -146,6 +166,7 @@ class Message(BaseModel):
     location: Optional[Location]
     reaction: Optional[Reaction]
     system: Optional[System]
+    order: Optional[Order]
 
     class Config:
         use_enum_values = True

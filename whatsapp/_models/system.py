@@ -7,5 +7,5 @@ class System(BaseModel):
     identity: Optional[str]
     new_wa_id: Optional[str]
     wa_id: Optional[str]
-    type_: Literal["customer_changed_number", "customer_identity_changed"]
+    type: Literal["customer_changed_number", "customer_identity_changed"]
     customer: Optional[str]

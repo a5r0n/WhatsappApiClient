@@ -1,3 +1,9 @@
+## v0.10.1 (2023-10-26)
+
+### Fix
+
+- **incoming**: typo in System model - type_ -> type
+
 ## v0.10.0 (2023-10-24)
 
 ### Feat

@@ -215,6 +215,17 @@ async def test_send_buttons(
 
 
 @pytest.mark.asyncio
+async def test_catalog(
+    client: WhatsAppClient,
+    to: str,
+    text: str,
+    product_retailer_id: str,
+):
+    resp = await client.send_catalog(to, text, product_retailer_id=product_retailer_id)
+    assert resp.success is True
+
+
+@pytest.mark.asyncio
 async def test_send_product(
     client: WhatsAppClient,
     to: str,

@@ -9,6 +9,7 @@ from whatsapp._models.interactive import (
     InteractiveFlow,
     InteractiveProduct,
     InteractiveProductList,
+    InteractiveCatalogMessage,
 )
 from whatsapp._models.reaction import Reaction
 from whatsapp._models.template import (
@@ -61,6 +62,7 @@ class Message(BaseModel):
             InteractiveFlow,
             InteractiveProduct,
             InteractiveProductList,
+            InteractiveCatalogMessage,
         ]
     ]
     template: Optional[Template]

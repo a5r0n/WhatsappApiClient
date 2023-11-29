@@ -12,6 +12,7 @@ class InteractiveTypes(str, Enum):
     PRODUCT = "product"
     PRODUCT_LIST = "product_list"
     FLOW = "flow"
+    CATALOG_MESSAGE = "catalog_message"
 
 
 class HeaderTypes(str, Enum):
@@ -104,13 +105,19 @@ class ProductSection(Section):
     product_items: List[ProductItem]
 
 
+class CatalogMessageActionParameters(BaseModel):
+    thumbnail_product_retailer_id: str
+
+
 class Action(BaseModel):
+    name: Optional[str]
     button: Optional[Button]
     buttons: Optional[List[Button]]
     sections: Optional[List[Section]]
     parameters: Optional[Parameters]
     catalog_id: Optional[str]
     product_retailer_id: Optional[str]
+    parameters: Optional[CatalogMessageActionParameters]
 
     @validator("sections", always=True)
     def sections_may_need_title(cls, v, values):
@@ -148,13 +155,30 @@ class ProductListAction(Action):
     sections: conlist(ProductSection, min_items=1)
 
 
+class CatalogMessageAction(Action):
+    name: str = "catalog_message"
+
+    @classmethod
+    def from_product_retailer_id(cls, product_retailer_id: str):
+        return cls(
+            parameters=CatalogMessageActionParameters(
+                thumbnail_product_retailer_id=product_retailer_id
+            )
+        )
+
+
 class Interactive(BaseModel):
     type: InteractiveTypes
     body: Text
     footer: Optional[Text]
     header: Optional[Header]
     action: Union[
-        ListAction, ButtonsAction, FlowAction, ProductListAction, ProductAction
+        ListAction,
+        ButtonsAction,
+        FlowAction,
+        ProductListAction,
+        ProductAction,
+        CatalogMessageAction,
     ]
 
     class Config:
@@ -195,3 +219,8 @@ class InteractiveProductList(Interactive):
     type: InteractiveTypes = InteractiveTypes.PRODUCT_LIST
     header: TextHeader
     action: ProductListAction
+
+
+class InteractiveCatalogMessage(Interactive):
+    type: InteractiveTypes = InteractiveTypes.CATALOG_MESSAGE
+    action: CatalogMessageAction

@@ -370,6 +370,28 @@ class Client:
         )
         return await self.send(data=message)
 
+    async def send_catalog(
+        self,
+        to: str,
+        text: str,
+        product_retailer_id: str,
+        header: Optional["Header"] = None,
+        footer: Optional["Text"] = None,
+    ):
+        message = messages.Message(
+            to=to,
+            type=messages.MessageType.INTERACTIVE,
+            interactive=messages.interactive.InteractiveCatalogMessage(
+                body=messages.interactive.Text(text=text),
+                header=header,
+                footer=footer,
+                action=messages.interactive.CatalogMessageAction.from_product_retailer_id(
+                    product_retailer_id
+                ),
+            ),
+        )
+        return await self.send(data=message)
+
     async def send_product(
         self,
         to: str,

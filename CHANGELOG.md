@@ -1,3 +1,9 @@
+## v0.11.0 (2023-11-29)
+
+### Feat
+
+- **flow**: Add support for send & receive flow messages/responses
+
 ## v0.10.2 (2023-10-26)
 
 ### Fix

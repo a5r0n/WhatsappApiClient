@@ -2,7 +2,7 @@ from dataclasses import field, dataclass
 import io
 from json import JSONDecodeError
 import json
-from typing import Dict, List, Tuple, Union, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Literal, Tuple, Union, Optional, TYPE_CHECKING
 
 from aiohttp import ClientSession, FormData, MultipartWriter
 from aiohttp.client_exceptions import ContentTypeError
@@ -321,6 +321,49 @@ class Client:
                             ],
                         )
                     ],
+                ),
+            ),
+        )
+        return await self.send(data=message)
+
+    async def send_flow(
+        self,
+        to,
+        text,
+        button: str,
+        flow_id: str,
+        action: Literal["navigate", "data_exchange"] = "navigate",
+        mode: Literal["draft", "published"] = "published",
+        token: Optional[str] = None,
+        payload_screen: Optional[str] = None,
+        payload_data: Optional[Dict[str, Any]] = None,
+        header: Optional["Header"] = None,
+        footer: Optional["Text"] = None,
+    ):
+        parameters_kwargs = {}
+        if token:
+            parameters_kwargs["flow_token"] = token
+        if payload_screen:
+            parameters_kwargs["flow_action_payload"] = {
+                "screen": payload_screen,
+                "data": payload_data or {},
+            }
+
+        message = messages.Message(
+            to=to,
+            type=messages.MessageType.INTERACTIVE,
+            interactive=messages.interactive.InteractiveFlow(
+                body=messages.interactive.Text(text=text),
+                header=header,
+                footer=footer,
+                action=messages.interactive.FlowAction(
+                    parameters=messages.interactive.Parameters(
+                        mode=mode,
+                        flow_id=flow_id,
+                        flow_action=action,
+                        flow_cta=button,
+                        **parameters_kwargs,
+                    ),
                 ),
             ),
         )

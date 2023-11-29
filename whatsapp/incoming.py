@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 from pydantic import BaseModel, Field
 
 from whatsapp._models.message import Text
@@ -32,10 +32,16 @@ class Reply(BaseModel):
     description: Optional[str]
 
 
+class FlowReplay(BaseModel):
+    name: str
+    response_json: Dict[str, Any]
+
+
 class Interactive(BaseModel):
-    type: Literal["button_reply", "list_reply"]
+    type: Literal["button_reply", "list_reply", "nfm_reply"]
     button_reply: Optional[Reply] = None
     list_reply: Optional[Reply] = None
+    nfm_reply: Optional[FlowReplay] = None
 
 
 class Media(BaseModel):

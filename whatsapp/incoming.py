@@ -1,6 +1,7 @@
 from enum import Enum
+import json
 from typing import Any, Dict, List, Literal, Optional, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 from whatsapp._models.message import Text
 from whatsapp._models.contacts import Contacts, Location
@@ -35,6 +36,12 @@ class Reply(BaseModel):
 class FlowReplay(BaseModel):
     name: str
     response_json: Dict[str, Any]
+
+    @validator("response_json", pre=True)
+    def convert_json(cls, v):
+        if isinstance(v, str):
+            return json.loads(v)
+        return v
 
 
 class Interactive(BaseModel):

@@ -1,3 +1,9 @@
+## v0.11.1 (2023-11-30)
+
+### Fix
+
+- **incoming**: FlowReplay response_json needs convert to dict
+
 ## v0.11.0 (2023-11-29)
 
 ### Feat

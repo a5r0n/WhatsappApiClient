@@ -70,6 +70,21 @@ def buttons():
 
 
 @pytest.fixture(scope="session")
+def catalog_id():
+    return os.getenv("WHATSAPP_CATALOG_ID")
+
+
+@pytest.fixture(scope="session")
+def product_retailer_id():
+    return os.getenv("WHATSAPP_PRODUCT_RETAILER_ID")
+
+
+@pytest.fixture(scope="session")
+def product_items():
+    return os.getenv("WHATSAPP_PRODUCT_ITEMS").split(",")
+
+
+@pytest.fixture(scope="session")
 def list_title():
     return "List Title"
 
@@ -200,6 +215,49 @@ async def test_send_buttons(
 
 
 @pytest.mark.asyncio
+async def test_catalog(
+    client: WhatsAppClient,
+    to: str,
+    text: str,
+    product_retailer_id: str,
+):
+    resp = await client.send_catalog(to, text, product_retailer_id=product_retailer_id)
+    assert resp.success is True
+
+
+@pytest.mark.asyncio
+async def test_send_product(
+    client: WhatsAppClient,
+    to: str,
+    text: str,
+    catalog_id: str,
+    product_retailer_id: str,
+):
+    resp = await client.send_product(
+        to, text, catalog_id=catalog_id, product_retailer_id=product_retailer_id
+    )
+    assert resp.success is True
+
+
+@pytest.mark.asyncio
+async def test_send_product_list(
+    client: WhatsAppClient,
+    to: str,
+    text: str,
+    catalog_id: str,
+    product_items: List[str],
+):
+    resp = await client.send_product_list(
+        to,
+        text,
+        header=text,
+        catalog_id=catalog_id,
+        product_items=product_items,
+    )
+    assert resp.success is True
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "header_type,media_link",
     [
@@ -316,7 +374,6 @@ async def test_send_image_url(client: WhatsAppClient, to: str, image_url: str, c
 async def test_send_document_local(
     client: WhatsAppClient, to: str, document_media: str, filename
 ):
-
     await client.send_document(
         to, media_id=document_media, filename=filename, caption="Test"
     )

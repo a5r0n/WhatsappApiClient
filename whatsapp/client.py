@@ -10,13 +10,14 @@ from loguru import logger
 from pydantic import BaseModel, ValidationError
 
 from whatsapp import errors, messages, responses
+from whatsapp._models.interactive import Header, HeaderTypes
 from whatsapp._models.media import Media, MediaTypes
 
 from .config import WhatsAppConfig
 from .utils import needs_login
 
 if TYPE_CHECKING:
-    from ._models.interactive import Header, Text
+    from ._models.interactive import Text
 
 
 @dataclass
@@ -365,6 +366,104 @@ class Client:
                         **parameters_kwargs,
                     ),
                 ),
+            ),
+        )
+        return await self.send(data=message)
+
+    async def send_catalog(
+        self,
+        to: str,
+        text: str,
+        product_retailer_id: str,
+        header: Optional["Header"] = None,
+        footer: Optional["Text"] = None,
+    ):
+        message = messages.Message(
+            to=to,
+            type=messages.MessageType.INTERACTIVE,
+            interactive=messages.interactive.InteractiveCatalogMessage(
+                body=messages.interactive.Text(text=text),
+                header=header,
+                footer=footer,
+                action=messages.interactive.CatalogMessageAction.from_product_retailer_id(
+                    product_retailer_id
+                ),
+            ),
+        )
+        return await self.send(data=message)
+
+    async def send_product(
+        self,
+        to: str,
+        text: str,
+        catalog_id: str,
+        product_retailer_id: str,
+        header: Optional["Header"] = None,
+        footer: Optional["Text"] = None,
+    ):
+        message = messages.Message(
+            to=to,
+            type=messages.MessageType.INTERACTIVE,
+            interactive=messages.interactive.InteractiveProduct(
+                body=messages.interactive.Text(text=text),
+                header=header,
+                footer=footer,
+                action=messages.interactive.ProductAction(
+                    catalog_id=catalog_id,
+                    product_retailer_id=product_retailer_id,
+                ),
+            ),
+        )
+        return await self.send(data=message)
+
+    async def send_product_list(
+        self,
+        to: str,
+        text: str,
+        header: str,
+        catalog_id: str,
+        product_items: List[str],
+        footer: Optional["Text"] = None,
+    ):
+        # check if product_items is a list of strings
+        if len(product_items) > 0 and isinstance(product_items[0], str):
+            sections = [
+                messages.interactive.ProductSection(
+                    product_items=[
+                        messages.interactive.ProductItem(
+                            product_retailer_id=product_retailer_id
+                        )
+                        for product_retailer_id in product_items
+                    ]
+                )
+            ]
+        else:
+            sections = [
+                messages.interactive.ProductSection(
+                    **(section if isinstance(section, dict) else section.dict())
+                )
+                for section in product_items
+            ]
+
+        if len(sections) == 0:
+            raise ValueError("product_items must not be empty")
+
+        action = messages.interactive.ProductListAction(
+            catalog_id=catalog_id,
+            sections=sections,
+        )
+
+        message = messages.Message(
+            to=to,
+            type=messages.MessageType.INTERACTIVE,
+            interactive=messages.interactive.InteractiveProductList(
+                body=messages.interactive.Text(text=text),
+                header=Header(
+                    type=HeaderTypes.TEXT,
+                    text=header,
+                ),
+                footer=footer,
+                action=action,
             ),
         )
         return await self.send(data=message)

@@ -1,4 +1,4 @@
-__version__ = "0.11.2"
+__version__ = "0.12.0"
 
 from .client import Client as WhatsAppClient
 from .config import WhatsAppConfig

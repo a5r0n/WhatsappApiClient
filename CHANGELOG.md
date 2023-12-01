@@ -1,3 +1,13 @@
+## v0.12.0 (2023-12-01)
+
+### Feat
+
+- **messages**: Add catalog message support
+- **incoming**: Add support for order & product inquiry message
+- **messages**: Add product & product list message
+
+## v0.11.2 (2023-11-30)
+
 ## v0.11.1 (2023-11-30)
 
 ### Fix

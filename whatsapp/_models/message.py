@@ -26,7 +26,7 @@ class TextFont(str, Enum):
 
 
 class Text(BaseModel):
-    body: constr(min_length=1, max_length=1024)
+    body: constr(min_length=1)
     font: Optional[TextFont] = None
     background_color: Optional[str] = None
     text_color: Optional[str] = None

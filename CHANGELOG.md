@@ -1,3 +1,9 @@
+## v0.12.1 (2023-12-17)
+
+### Fix
+
+- **messages**: remove text max length limit (for unofficial API)
+
 ## v0.12.0 (2023-12-01)
 
 ### Feat

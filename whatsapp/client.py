@@ -170,6 +170,47 @@ class Client:
         return resp
 
     @needs_login
+    async def newsletters(self):
+        """Get all subscribed newsletters"""
+        resp: responses.NewslettersResponse = await self._do_request(
+            "GET",
+            f"{self.config.endpoint}/newsletters",
+            response_model=responses.NewslettersResponse,
+        )
+        return resp
+
+    @needs_login
+    async def newsletter(self, newsletter_id: str):
+        """Get a newsletter by id or invite code"""
+        resp: responses.NewsletterResponse = await self._do_request(
+            "GET",
+            f"{self.config.endpoint}/newsletters/{newsletter_id}",
+            response_model=responses.NewsletterResponse,
+        )
+        return resp
+
+    @needs_login
+    async def follow(self, newsletter_id: str):
+        """Follow a newsletter"""
+        resp: responses.ApiResponse = await self._do_request(
+            "PUT",
+            f"{self.config.endpoint}/newsletters",
+            data={"id": newsletter_id},
+            response_model=responses.ApiResponse,
+        )
+        return resp
+
+    @needs_login
+    async def unfollow(self, newsletter_id: str):
+        """Unfollow a newsletter"""
+        resp: responses.ApiResponse = await self._do_request(
+            "DELETE",
+            f"{self.config.endpoint}/newsletters/{newsletter_id}",
+            response_model=responses.ApiResponse,
+        )
+        return resp
+
+    @needs_login
     async def privacy(self):
         resp: responses.PrivacyResponse = await self._do_request(
             "GET",

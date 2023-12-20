@@ -48,6 +48,9 @@ class Message(BaseModel):
     messaging_product: str = "whatsapp"
     type: MessageType
     to: str
+    id: Optional[str] = Field(
+        description="The message ID for message to send. available only in unofficial api"
+    )
     context: Optional[Context]
     text: Optional[Text]
     image: Optional[Media]
@@ -69,12 +72,29 @@ class Message(BaseModel):
     reaction: Optional[Reaction]
     recipient_type: Optional[Literal["individual", "group"]] = Field(
         "individual",
-        description="Determines whether the recipient is an individual or a group\nSpecifying recipient_type in the request is optional when the value is individual.\nHowever, recipient_type is required when using group. If sending a text message to a group, see the Sending Group Messages documentation.",
+        description=(
+            "Determines whether the recipient is an individual or a group\n"
+            "Specifying recipient_type in the request is optional when the value is individual.\n"
+            "However, recipient_type is required when using group."
+            " If sending a text message to a group,"
+            "see the Sending Group Messages documentation."
+        ),
+    )
+    participants: Optional[List[str]] = Field(
+        None,
+        description=(
+            "The participants array. international format phone numbers."
+            "available only in unofficial api"
+        ),
     )
     ttl: Optional[Dict[str, Any]] = None
     preview_url: Optional[bool] = Field(
         None,
-        description="Specifying preview_url in the request is optional when not including a URL in your message.\nTo include a URL preview, set preview_url to true in the message body and make sure the URL begins with http:// or https://. For more information, see the Sending URLs in Text Messages section.",
+        description=(
+            "Specifying preview_url in the request is optional when not including a URL in your message.\n"
+            "To include a URL preview, set preview_url to true in the message body and make sure the URL begins with http:// or https://. "
+            "For more information, see the Sending URLs in Text Messages section."
+        ),
     )
 
     class Config:

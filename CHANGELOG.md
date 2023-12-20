@@ -1,3 +1,9 @@
+## v0.13.0 (2023-12-20)
+
+### Feat
+
+- Add message id and participants
+
 ## v0.12.1 (2023-12-17)
 
 ### Fix

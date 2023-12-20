@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "WhatsappApiClient"
-version = "0.12.1"
+version = "0.13.0"
 description = "Whatsapp API client"
 authors = ["a5r0n <a5r0n@users.noreply.github.com>"]
 packages = [{ include = "whatsapp" }]
@@ -18,7 +18,7 @@ pytest-dotenv = "^0.5.2"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.12.1"
+version = "0.13.0"
 tag_format = "v$version"
 version_files = [
     "pyproject.toml:version",

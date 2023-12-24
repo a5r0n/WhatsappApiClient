@@ -1,3 +1,9 @@
+## v0.14.0 (2023-12-24)
+
+### Feat
+
+- Add newsletters support
+
 ## v0.13.0 (2023-12-20)
 
 ### Feat

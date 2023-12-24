@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Dict, List, Literal, Optional, Union
 from pydantic import BaseModel, Field
 
@@ -34,6 +35,19 @@ class Group(BaseModel):
     created: str
     ephemeral: bool = False
     locked: bool = False
+
+
+class Newsletter(BaseModel):
+    id: str
+    name: str
+    creation_time: datetime
+    description: Optional[str]
+    profile: Optional[str]
+    role: Optional[Literal["owner", "admin", "subscriber", "guest"]]
+    invite: Optional[str]
+    subscribers: Optional[int]
+    verified: bool = False
+    muted: bool = False
 
 
 class ContactInfo(BaseModel):
@@ -87,6 +101,14 @@ class GroupsResponse(Response):
     data: Optional[List[Group]] = []
 
 
+class NewslettersResponse(Response):
+    data: Optional[List[Newsletter]] = []
+
+
+class NewsletterResponse(Response):
+    data: Newsletter
+
+
 class UploadResponse(Response):
     media: List[UploadedMedia]
 
@@ -127,8 +149,10 @@ AnyResponse = Union[
     LogoutResponse,
     StatusResponse,
     GroupsResponse,
+    NewslettersResponse,
     MessageResponse,
     UploadResponse,
+    NewsletterResponse,
     Response,
 ]
 

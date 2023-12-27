@@ -53,6 +53,7 @@ class TemplateParameter(BaseModel):
         "video",
         "payload",
         "action",
+        "coupon_code",
     ]
     text: Optional[str]
     image: Optional[Media]
@@ -62,13 +63,48 @@ class TemplateParameter(BaseModel):
     date_time: Optional[DateTime]
     payload: Optional[str]
     action: Optional[Action]
+    coupon_code: Optional[str]
 
 
 class TemplateComponent(BaseModel):
     type: TemplateComponentType
-    sub_type: Optional[Literal["quick_reply", "url", "flow"]]
+    sub_type: Optional[Literal["quick_reply", "url", "flow", "copy_code"]]
     index: Optional[int]
     parameters: Optional[List[TemplateParameter]]
+
+    @classmethod
+    def from_button_paramter(cls, index: int, parameter: TemplateParameter, *args):
+        """Create a TemplateComponent from a TemplateParameter of type button."""
+        if parameter.type == "action":
+            return cls(
+                type=TemplateComponentType.button,
+                sub_type="flow",
+                index=index,
+                parameters=[parameter, *args],
+            )
+        elif parameter.type == "payload":
+            return cls(
+                type=TemplateComponentType.button,
+                sub_type="quick_reply",
+                index=index,
+                parameters=[parameter, *args],
+            )
+        elif parameter.type == "text":
+            return cls(
+                type=TemplateComponentType.button,
+                sub_type="url",
+                index=index,
+                parameters=[parameter, *args],
+            )
+        elif parameter.type == "coupon_code":
+            return cls(
+                type=TemplateComponentType.button,
+                sub_type="copy_code",
+                index=index,
+                parameters=[parameter, *args],
+            )
+        else:
+            raise ValueError(f"Invalid button parameter type: {parameter.type}")
 
 
 class Template(BaseModel):

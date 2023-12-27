@@ -1,3 +1,9 @@
+## v0.15.0 (2023-12-27)
+
+### Feat
+
+- **messages**: Add coupon_code template support
+
 ## v0.14.0 (2023-12-24)
 
 ### Feat

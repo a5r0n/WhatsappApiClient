@@ -74,10 +74,19 @@ class UploadedMedia(BaseModel):
     id: str
 
 
+class CloudAPIErrorResponse(BaseModel):
+    message: str
+    type: str
+    code: int
+    error_subcode: Optional[int]
+    error_data: Optional[dict]
+
+
 class Response(BaseModel):
     success: bool
     message: Optional[str]
     data: Optional[Union[dict, list, str, int, bool]]
+    error: Optional[CloudAPIErrorResponse]
 
 
 class LoginResponse(Response):

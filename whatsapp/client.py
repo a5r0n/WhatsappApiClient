@@ -109,6 +109,13 @@ class Client:
             ).debug("response parsed as {}".format(model_resp.__class__.__name__))
 
             if isinstance(model_resp, responses.Response) and not model_resp.success:
+                if model_resp.error is not None:
+                    raise errors.CloudAPIError(
+                        resp.status,
+                        resp.reason,
+                        model_resp.error.message,
+                        model_resp.error.dict(exclude_none=True),
+                    )
                 raise errors.RequestError(
                     resp.status, resp.reason, model_resp.message, model_resp.data
                 )

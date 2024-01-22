@@ -26,6 +26,7 @@ class IncomingMessageType(str, Enum):
     REACTION = "reaction"
     SYSTEM = "system"
     ORDER = "order"
+    REQUEST_WELCOME = "request_welcome"
 
 
 class Reply(BaseModel):

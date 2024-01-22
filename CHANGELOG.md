@@ -1,3 +1,9 @@
+## v0.15.1 (2024-01-22)
+
+### Fix
+
+- Add cloud api error handling
+
 ## v0.15.0 (2023-12-27)
 
 ### Feat

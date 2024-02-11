@@ -1,5 +1,4 @@
 from dataclasses import field, dataclass
-import io
 from json import JSONDecodeError
 import json
 from typing import Any, Dict, List, Literal, Tuple, Union, Optional, TYPE_CHECKING
@@ -87,7 +86,7 @@ class Client:
 
             if response_model:
                 try:
-                    model_resp = response_model.parse_obj(json_data)
+                    model_resp = response_model.model_validate(json_data)
                 except Exception as e:
                     logger.bind(
                         error=e,
@@ -97,7 +96,7 @@ class Client:
                     ).warning(f"Failed to parse response as {response_model.__name__}")
 
             if isinstance(model_resp, responses.ApiResponse):
-                model_resp = model_resp.__root__
+                model_resp = model_resp.root
 
             logger.bind(
                 raw_data=data_to_log,
@@ -520,7 +519,7 @@ class Client:
         self, to, type: str, media_id=None, media_link=None, *args, **kwargs
     ):
         try:
-            media = messages.Media.parse_obj(
+            media = messages.Media.model_validate(
                 {
                     "type": type,
                     "id": media_id,
@@ -532,7 +531,7 @@ class Client:
         except ValidationError:
             raise ValueError("Either media_id or media_link must be specified")
 
-        message = messages.Message.parse_obj(
+        message = messages.Message.model_validate(
             {
                 "to": to,
                 "type": type,

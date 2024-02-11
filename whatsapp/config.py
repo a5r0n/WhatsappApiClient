@@ -2,15 +2,14 @@ from typing import Optional
 from . import __version__
 from driconfig import DriConfig
 
-from pydantic import BaseModel, BaseSettings, Field, ValidationError, validator
+from pydantic import ConfigDict, BaseModel, Field
 from os.path import split
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class ConfigConfig(BaseSettings):
     path: str = "config.yaml"
-
-    class Config:
-        env_prefix = "CONFIG_"
+    model_config = SettingsConfigDict(env_prefix="CONFIG_")
 
 
 class DefaultsConfig(BaseModel):
@@ -27,11 +26,11 @@ class WhatsAppConfig(DriConfig):
 
     use_token: bool = True
     user_agent: str = f"WhatsAppApiClient/{__version__} (python)"
-
-    class Config:
-        env_prefix = "WA_"
-        config_folder = split(ConfigConfig().path)[0]
-        config_file_name = split(ConfigConfig().path)[1]
+    model_config = ConfigDict(
+        env_prefix="WA_",
+        config_folder=split(ConfigConfig().path)[0],
+        config_file_name=split(ConfigConfig().path)[1],
+    )
 
     @property
     def is_logged_in(self):

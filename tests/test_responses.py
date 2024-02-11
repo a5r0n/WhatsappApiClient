@@ -15,7 +15,7 @@ def messages_offical_response():
 
 
 def test_messages_response(messages_offical_response):
-    response = responses.ApiResponse.parse_obj(messages_offical_response)
+    response = responses.ApiResponse.model_validate(messages_offical_response)
     assert isinstance(response.__root__, responses.MessageResponse)
 
     response = response.__root__

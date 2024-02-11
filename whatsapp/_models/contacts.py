@@ -1,5 +1,5 @@
-from typing import Dict, List, Literal, Optional, Union
-from pydantic import BaseModel, Field, root_validator
+from typing import List, Optional
+from pydantic import RootModel, model_validator, BaseModel, Field
 
 
 class Address(BaseModel):
@@ -16,7 +16,7 @@ class Address(BaseModel):
 
 class Email(BaseModel):
     email: str
-    type: Optional[str]
+    type: Optional[str] = None
 
 
 class Name(BaseModel):
@@ -74,10 +74,17 @@ class Contact(BaseModel):
     contact_image: Optional[str] = Field(None, description="Contact image")
 
     # TODO: #69 move to base model
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def remover_none_fields(cls, values: dict):
         return {k: v for k, v in values.items() if v}
 
 
-class Contacts(BaseModel):
-    __root__: List[Contact]
+class Contacts(RootModel[Contact]):
+    root: List[Contact]
+
+    def __iter__(self):
+        return iter(self.root)
+
+    def __getitem__(self, item) -> Contact:
+        return self.root[item]

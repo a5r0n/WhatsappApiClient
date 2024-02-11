@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Dict, List, Literal, Optional, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 
 
 class Jid(BaseModel):
@@ -26,7 +26,7 @@ class Privacy(BaseModel):
 class Group(BaseModel):
     id: str
     name: str
-    topic: Optional[str]
+    topic: Optional[str] = None
 
     owner: str
     admins: List[str] = []
@@ -41,21 +41,21 @@ class Newsletter(BaseModel):
     id: str
     name: str
     creation_time: datetime
-    description: Optional[str]
-    profile: Optional[str]
-    role: Optional[Literal["owner", "admin", "subscriber", "guest"]]
-    invite: Optional[str]
-    subscribers: Optional[int]
+    description: Optional[str] = None
+    profile: Optional[str] = None
+    role: Optional[Literal["owner", "admin", "subscriber", "guest"]] = None
+    invite: Optional[str] = None
+    subscribers: Optional[int] = None
     verified: bool = False
     muted: bool = False
 
 
 class ContactInfo(BaseModel):
     found: bool = Field(alias="Found")
-    first_name: Optional[str] = Field(alias="FirstName")
-    full_name: Optional[str] = Field(alias="FullName")
-    push_name: Optional[str] = Field(alias="PushName")
-    business_name: Optional[str] = Field(alias="BusinessName")
+    first_name: Optional[str] = Field(None, alias="FirstName")
+    full_name: Optional[str] = Field(None, alias="FullName")
+    push_name: Optional[str] = Field(None, alias="PushName")
+    business_name: Optional[str] = Field(None, alias="BusinessName")
 
 
 class Contact(BaseModel):
@@ -66,8 +66,8 @@ class Contact(BaseModel):
 class StatusData(BaseModel):
     status: Literal["init", "connected", "error"]
     id: str
-    whatsapp_name: Optional[str]
-    whatsapp_id: Optional[str]
+    whatsapp_name: Optional[str] = None
+    whatsapp_id: Optional[str] = None
 
 
 class UploadedMedia(BaseModel):
@@ -78,15 +78,15 @@ class CloudAPIErrorResponse(BaseModel):
     message: str
     type: str
     code: int
-    error_subcode: Optional[int]
-    error_data: Optional[dict]
+    error_subcode: Optional[int] = None
+    error_data: Optional[dict] = None
 
 
 class Response(BaseModel):
     success: bool
-    message: Optional[str]
-    data: Optional[Union[dict, list, str, int, bool]]
-    error: Optional[CloudAPIErrorResponse]
+    message: Optional[str] = None
+    data: Optional[Union[dict, list, str, int, bool]] = None
+    error: Optional[CloudAPIErrorResponse] = None
 
 
 class LoginResponse(Response):
@@ -166,5 +166,9 @@ AnyResponse = Union[
 ]
 
 
-class ApiResponse(BaseModel):
-    __root__: AnyResponse
+class ApiResponse(RootModel[AnyResponse]):
+    root: AnyResponse
+
+    @property
+    def __root__(self) -> AnyResponse:
+        return self.root

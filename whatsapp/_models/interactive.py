@@ -2,8 +2,16 @@ from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 import uuid
 
-from pydantic import BaseModel, Field, conlist, constr, root_validator, validator
+from pydantic import (
+    StringConstraints,
+    ConfigDict,
+    BaseModel,
+    Field,
+    field_validator,
+    model_validator,
+)
 from .media import Media
+from typing_extensions import Annotated
 
 
 class InteractiveTypes(str, Enum):
@@ -28,10 +36,10 @@ class Text(BaseModel):
 
 class Header(BaseModel):
     type: HeaderTypes
-    text: Optional[Union[Text, str]]
-    video: Optional[Media]
-    image: Optional[Media]
-    document: Optional[Media]
+    text: Optional[Union[Text, str]] = None
+    video: Optional[Media] = None
+    image: Optional[Media] = None
+    document: Optional[Media] = None
 
 
 class TextHeader(Header):
@@ -45,12 +53,12 @@ class Row(BaseModel):
 
 
 class ButtonRow(Row):
-    title: constr(max_length=20)
+    title: Annotated[str, StringConstraints(max_length=20)]
 
 
 class SectionRow(Row):
-    title: constr(max_length=23)
-    description: Optional[constr(max_length=72)]
+    title: Annotated[str, StringConstraints(max_length=23)]
+    description: Optional[Annotated[str, StringConstraints(max_length=72)]] = None
 
 
 class ProductItem(BaseModel):
@@ -63,9 +71,9 @@ class Button(BaseModel):
 
 
 class Section(BaseModel):
-    title: Optional[str]
-    rows: Optional[List[SectionRow]]
-    product_items: Optional[List[ProductItem]]
+    title: Optional[str] = None
+    rows: Optional[List[SectionRow]] = None
+    product_items: Optional[List[ProductItem]] = None
 
 
 class ListSection(Section):
@@ -74,7 +82,7 @@ class ListSection(Section):
 
 class ParametersPayload(BaseModel):
     screen: str
-    data: Optional[Dict[str, Any]]
+    data: Optional[Dict[str, Any]] = None
 
 
 class Parameters(BaseModel):
@@ -87,9 +95,9 @@ class Parameters(BaseModel):
     flow_id: str
     flow_cta: str
     flow_action: Literal["navigate", "data_exchange"]
-    flow_action_payload: Optional[ParametersPayload]
+    flow_action_payload: Optional[ParametersPayload] = None
 
-    @root_validator
+    @model_validator(mode="before")
     def validate_payload_when_action_is_navigate(cls, values):
         if values.get("flow_action") == "navigate" and not values.get(
             "flow_action_payload"
@@ -110,16 +118,17 @@ class CatalogMessageActionParameters(BaseModel):
 
 
 class Action(BaseModel):
-    name: Optional[str]
-    button: Optional[Button]
-    buttons: Optional[List[Button]]
-    sections: Optional[List[Section]]
-    parameters: Optional[Parameters]
-    catalog_id: Optional[str]
-    product_retailer_id: Optional[str]
-    parameters: Optional[CatalogMessageActionParameters]
+    name: Optional[str] = None
+    button: Optional[Button] = None
+    buttons: Optional[List[Button]] = None
+    sections: Optional[List[Section]] = None
+    parameters: Optional[Parameters] = None
+    catalog_id: Optional[str] = None
+    product_retailer_id: Optional[str] = None
+    parameters: Optional[CatalogMessageActionParameters] = None
 
-    @validator("sections", always=True)
+    @field_validator("sections")
+    @classmethod
     def sections_may_need_title(cls, v, values):
         if v and len(v) > 1:
             for section in v:
@@ -152,7 +161,7 @@ class ProductAction(Action):
 
 class ProductListAction(Action):
     catalog_id: str
-    sections: conlist(ProductSection, min_items=1)
+    sections: Annotated[List[ProductSection], Field(min_length=1)]
 
 
 class CatalogMessageAction(Action):
@@ -170,8 +179,8 @@ class CatalogMessageAction(Action):
 class Interactive(BaseModel):
     type: InteractiveTypes
     body: Text
-    footer: Optional[Text]
-    header: Optional[Header]
+    footer: Optional[Text] = None
+    header: Optional[Header] = None
     action: Union[
         ListAction,
         ButtonsAction,
@@ -180,11 +189,9 @@ class Interactive(BaseModel):
         ProductAction,
         CatalogMessageAction,
     ]
+    model_config = ConfigDict(use_enum_values=True)
 
-    class Config:
-        use_enum_values = True
-
-    @root_validator
+    @model_validator(mode="before")
     def must_have_header_for_product_list(cls, values):
         if values.get("type") == InteractiveTypes.PRODUCT_LIST and not values.get(
             "header"

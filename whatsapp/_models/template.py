@@ -16,11 +16,11 @@ class TemplateComponentType(Enum):
 
 
 class Media(BaseModel):
-    id: Optional[str]
-    link: Optional[str]
-    caption: Optional[str]
-    filename: Optional[str]
-    thumbnail: Optional[Thumbnail]
+    id: Optional[str] = None
+    link: Optional[str] = None
+    caption: Optional[str] = None
+    filename: Optional[str] = None
+    thumbnail: Optional[Thumbnail] = None
 
 
 class Currency(BaseModel):
@@ -39,8 +39,8 @@ class DateTime(BaseModel):
 class Action(BaseModel):
     """Action is a special type of parameter that is used to define a button action for flows."""
 
-    flow_token: Optional[str]
-    flow_action_data: Optional[Dict[str, Any]]
+    flow_token: Optional[str] = None
+    flow_action_data: Optional[Dict[str, Any]] = None
 
 
 class TemplateParameter(BaseModel):
@@ -55,22 +55,22 @@ class TemplateParameter(BaseModel):
         "action",
         "coupon_code",
     ]
-    text: Optional[str]
-    image: Optional[Media]
-    document: Optional[Media]
-    video: Optional[Media]
-    currency: Optional[Currency]
-    date_time: Optional[DateTime]
-    payload: Optional[str]
-    action: Optional[Action]
-    coupon_code: Optional[str]
+    text: Optional[str] = None
+    image: Optional[Media] = None
+    document: Optional[Media] = None
+    video: Optional[Media] = None
+    currency: Optional[Currency] = None
+    date_time: Optional[DateTime] = None
+    payload: Optional[str] = None
+    action: Optional[Action] = None
+    coupon_code: Optional[str] = None
 
 
 class TemplateComponent(BaseModel):
     type: TemplateComponentType
-    sub_type: Optional[Literal["quick_reply", "url", "flow", "copy_code"]]
-    index: Optional[int]
-    parameters: Optional[List[TemplateParameter]]
+    sub_type: Optional[Literal["quick_reply", "url", "flow", "copy_code"]] = None
+    index: Optional[int] = None
+    parameters: Optional[List[TemplateParameter]] = None
 
     @classmethod
     def from_button_paramter(cls, index: int, parameter: TemplateParameter, *args):
@@ -109,6 +109,6 @@ class TemplateComponent(BaseModel):
 
 class Template(BaseModel):
     name: str
-    namespace: Optional[str]
+    namespace: Optional[str] = None
     language: TemplateLanguage
-    components: Optional[List[TemplateComponent]]
+    components: Optional[List[TemplateComponent]] = None

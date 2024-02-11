@@ -1,8 +1,7 @@
-import base64
 from enum import Enum
-from typing import Literal, Optional, Union
+from typing import Optional, Union
 
-from pydantic import BaseModel, Field, root_validator
+from pydantic import RootModel, model_validator, BaseModel, Field
 
 
 class MediaTypes(str, Enum):
@@ -14,10 +13,11 @@ class MediaTypes(str, Enum):
 
 
 class Thumbnail(BaseModel):
-    link: Optional[str]
+    link: Optional[str] = None
     data: Optional[str] = Field(None, description="base64 encoded image data")
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def validate_link_or_data(cls, values):
         if not values.get("data") and not values.get("link"):
             raise ValueError("Either link or data must be provided")
@@ -26,14 +26,14 @@ class Thumbnail(BaseModel):
 
 
 class BaseMedia(BaseModel):
-    id: Optional[str]
-    link: Optional[str]
-    caption: Optional[str]
-    filename: Optional[str]
-    provider: Optional[str]
-    thumbnail: Optional[Thumbnail]
+    id: Optional[str] = None
+    link: Optional[str] = None
+    caption: Optional[str] = None
+    filename: Optional[str] = None
+    provider: Optional[str] = None
+    thumbnail: Optional[Thumbnail] = None
 
-    @root_validator
+    @model_validator(mode="before")
     def validate_one_of_sources(cls, values: dict):
         if not any([values.get("id"), values.get("link")]):
             raise ValueError(
@@ -42,7 +42,7 @@ class BaseMedia(BaseModel):
         return values
 
 
-## media by id
+# media by id
 
 
 class ImageById(BaseMedia):
@@ -62,7 +62,7 @@ class DocumentById(BaseMedia):
     filename: str
 
 
-## media by provider
+# media by provider
 
 
 class Provider(BaseModel):
@@ -86,34 +86,40 @@ class DocumentByProvider(BaseMedia):
     filename: str
 
 
-## final models for media objects
+# final models for media objects
 
 
-class Image(BaseModel):
-    __root__: Union[ImageById, ImageByProvider] = Field(
+class RootModelMixin:
+    @property
+    def __root__(self):
+        return self.root
+
+
+class Image(RootModelMixin, RootModel[Union[ImageById, ImageByProvider]]):
+    root: Union[ImageById, ImageByProvider] = Field(
         ..., description="The media object containing an image", title="Image"
     )
 
 
-class Audio(BaseModel):
-    __root__: Union[AudioById, AudioByProvider] = Field(
+class Audio(RootModelMixin, RootModel[Union[AudioById, AudioByProvider]]):
+    root: Union[AudioById, AudioByProvider] = Field(
         ..., description="The media object containing audio", title="Audio"
     )
 
 
-class Video(BaseModel):
-    __root__: Union[VideoById, VideoByProvider] = Field(
+class Video(RootModelMixin, RootModel[Union[VideoById, VideoByProvider]]):
+    root: Union[VideoById, VideoByProvider] = Field(
         ..., description="The media object containing a video", title="Video"
     )
 
 
-class Document(BaseModel):
-    __root__: Union[DocumentById, DocumentByProvider] = Field(
+class Document(RootModelMixin, RootModel[Union[DocumentById, DocumentByProvider]]):
+    root: Union[DocumentById, DocumentByProvider] = Field(
         ..., description="The media object containing a document", title="Document"
     )
 
 
-class Media(BaseModel):
-    __root__: Union[Image, Audio, Video, Document] = Field(
+class Media(RootModelMixin, RootModel[Union[Image, Audio, Video, Document]]):
+    root: Union[Image, Audio, Video, Document] = Field(
         ..., description="The media object containing a media", title="Media"
     )

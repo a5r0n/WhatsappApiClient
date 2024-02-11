@@ -6,9 +6,10 @@ authors = ["a5r0n <a5r0n@users.noreply.github.com>"]
 packages = [{ include = "whatsapp" }]
 [tool.poetry.dependencies]
 python = "^3.8"
-driconfig = "^0.2.0"
+driconfig = "^1.0.2"
 aiohttp = "^3.9.1"
 loguru = "^0.7.0"
+pydantic = "^2.6.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.4.3"

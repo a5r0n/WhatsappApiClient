@@ -15,10 +15,10 @@ def messages_offical_response():
 
 
 def test_messages_response(messages_offical_response):
-    response = responses.ApiResponse.parse_obj(messages_offical_response)
-    assert isinstance(response.__root__, responses.MessageResponse)
+    response = responses.ApiResponse.model_validate(messages_offical_response)
+    assert isinstance(response.root, responses.MessageResponse)
 
-    response = response.__root__
+    response = response.root
     assert response.success
     assert response.messaging_product == "whatsapp"
     assert response.contacts[0]["wa_id"] == "972543089167"

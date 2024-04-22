@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Literal, Optional, Union
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 from whatsapp._models.contacts import Contact, Contacts
 from whatsapp._models.message import MessageType, Text
 
@@ -23,7 +23,7 @@ from whatsapp._models import interactive, media, message
 
 
 class AccountInfo(BaseModel):
-    webhook_url: Optional[str]
+    webhook_url: Optional[str] = None
     only_status_updates: Optional[bool] = False
 
 
@@ -34,11 +34,11 @@ class ReadMark(BaseModel):
 
 
 class Media(BaseModel):
-    id: Optional[str]
-    link: Optional[str]
-    caption: Optional[str]
-    filename: Optional[str]
-    thumbnail: Optional[media.Thumbnail]
+    id: Optional[str] = None
+    link: Optional[str] = None
+    caption: Optional[str] = None
+    filename: Optional[str] = None
+    thumbnail: Optional[media.Thumbnail] = None
 
 
 class Context(BaseModel):
@@ -50,16 +50,17 @@ class Message(BaseModel):
     type: MessageType
     to: str
     id: Optional[str] = Field(
-        description="The message ID for message to send. available only in unofficial api"
+        None,
+        description="The message ID for message to send. available only in unofficial api",
     )
-    context: Optional[Context]
-    text: Optional[Text]
-    image: Optional[Media]
-    video: Optional[Media]
-    audio: Optional[Media]
-    document: Optional[Media]
-    contacts: Optional[List[Contact]]
-    interactive: Optional[
+    context: Optional[Context] = None
+    text: Optional[Text] = None
+    image: Optional[Media] = None
+    video: Optional[Media] = None
+    audio: Optional[Media] = None
+    document: Optional[Media] = None
+    contacts: Optional[List[Contact]] = None
+    interactive: Optional[  # noqa: F811
         Union[
             InteractiveList,
             InteractiveButtons,
@@ -69,9 +70,9 @@ class Message(BaseModel):
             InteractiveCatalogMessage,
             InteractiveUrl,
         ]
-    ]
-    template: Optional[Template]
-    reaction: Optional[Reaction]
+    ] = None
+    template: Optional[Template] = None
+    reaction: Optional[Reaction] = None
     recipient_type: Optional[Literal["individual", "group"]] = Field(
         "individual",
         description=(
@@ -98,6 +99,4 @@ class Message(BaseModel):
             "For more information, see the Sending URLs in Text Messages section."
         ),
     )
-
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)

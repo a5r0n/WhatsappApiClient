@@ -1,7 +1,8 @@
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, constr
+from pydantic import StringConstraints, ConfigDict, BaseModel
+from typing_extensions import Annotated
 
 
 class MessageType(str, Enum):
@@ -26,10 +27,8 @@ class TextFont(str, Enum):
 
 
 class Text(BaseModel):
-    body: constr(min_length=1)
+    body: Annotated[str, StringConstraints(min_length=1)]
     font: Optional[TextFont] = None
     background_color: Optional[str] = None
     text_color: Optional[str] = None
-
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)

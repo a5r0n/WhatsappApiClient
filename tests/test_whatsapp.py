@@ -279,8 +279,6 @@ async def test_send_interactive_with_header(
     footer: str,
     request,
 ):
-    button = "Choose one"
-
     if not header_type:
         header = None
     elif header_type == "text":
@@ -290,10 +288,10 @@ async def test_send_interactive_with_header(
         )
     elif header_type in ["image", "video", "document"]:
         media_link = request.getfixturevalue(media_link)
-        header = messages.interactive.Header.parse_obj(
+        header = messages.interactive.Header.model_validate(
             {
                 "type": header_type,
-                header_type: messages.interactive.Media.parse_obj(
+                header_type: messages.interactive.Media.model_validate(
                     {"link": media_link, "type": header_type}
                 ),
             }

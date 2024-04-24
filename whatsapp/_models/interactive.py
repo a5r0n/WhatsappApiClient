@@ -8,6 +8,7 @@ from .media import Media
 
 class InteractiveTypes(str, Enum):
     LIST = "list"
+    URL = "cta_url"
     BUTTON = "button"
     PRODUCT = "product"
     PRODUCT_LIST = "product_list"
@@ -72,12 +73,12 @@ class ListSection(Section):
     rows: List[SectionRow]
 
 
-class ParametersPayload(BaseModel):
+class FlowParametersPayload(BaseModel):
     screen: str
     data: Optional[Dict[str, Any]]
 
 
-class Parameters(BaseModel):
+class FlowParameters(BaseModel):
     mode: Literal["draft", "published"]
     flow_message_version: int = 3
     flow_token: str = Field(
@@ -87,7 +88,7 @@ class Parameters(BaseModel):
     flow_id: str
     flow_cta: str
     flow_action: Literal["navigate", "data_exchange"]
-    flow_action_payload: Optional[ParametersPayload]
+    flow_action_payload: Optional[FlowParametersPayload]
 
     @root_validator
     def validate_payload_when_action_is_navigate(cls, values):
@@ -109,15 +110,21 @@ class CatalogMessageActionParameters(BaseModel):
     thumbnail_product_retailer_id: str
 
 
+class UrlParameters(BaseModel):
+    display_text: str
+    url: str
+
+
 class Action(BaseModel):
     name: Optional[str]
     button: Optional[Button]
     buttons: Optional[List[Button]]
     sections: Optional[List[Section]]
-    parameters: Optional[Parameters]
+    parameters: Optional[
+        Union[UrlParameters, CatalogMessageActionParameters, FlowParameters]
+    ]
     catalog_id: Optional[str]
     product_retailer_id: Optional[str]
-    parameters: Optional[CatalogMessageActionParameters]
 
     @validator("sections", always=True)
     def sections_may_need_title(cls, v, values):
@@ -142,7 +149,7 @@ class ButtonsAction(Action):
 
 class FlowAction(Action):
     name: str = "flow"
-    parameters: Parameters
+    parameters: FlowParameters
 
 
 class ProductAction(Action):
@@ -167,6 +174,15 @@ class CatalogMessageAction(Action):
         )
 
 
+class UrlAction(Action):
+    name: Literal["cta_url"] = "cta_url"
+    parameters: UrlParameters
+
+    @classmethod
+    def from_url(cls, url: str, display_text: str):
+        return cls(parameters=UrlParameters(url=url, display_text=display_text))
+
+
 class Interactive(BaseModel):
     type: InteractiveTypes
     body: Text
@@ -179,6 +195,7 @@ class Interactive(BaseModel):
         ProductListAction,
         ProductAction,
         CatalogMessageAction,
+        UrlAction,
     ]
 
     class Config:
@@ -224,3 +241,8 @@ class InteractiveProductList(Interactive):
 class InteractiveCatalogMessage(Interactive):
     type: InteractiveTypes = InteractiveTypes.CATALOG_MESSAGE
     action: CatalogMessageAction
+
+
+class InteractiveUrl(Interactive):
+    type: InteractiveTypes = InteractiveTypes.URL
+    action: UrlAction

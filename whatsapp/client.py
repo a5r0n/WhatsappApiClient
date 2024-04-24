@@ -406,7 +406,7 @@ class Client:
                 header=header,
                 footer=footer,
                 action=messages.interactive.FlowAction(
-                    parameters=messages.interactive.Parameters(
+                    parameters=messages.interactive.FlowParameters(
                         mode=mode,
                         flow_id=flow_id,
                         flow_action=action,
@@ -510,6 +510,28 @@ class Client:
                     type=HeaderTypes.TEXT,
                     text=header,
                 ),
+                footer=footer,
+                action=action,
+            ),
+        )
+        return await self.send(data=message)
+
+    async def send_url(
+        self,
+        to: str,
+        text: str,
+        url: str,
+        title: str,
+        header: Optional["Header"] = None,
+        footer: Optional["Text"] = None,
+    ):
+        action = messages.interactive.UrlAction.from_url(url, title)
+        message = messages.Message(
+            to=to,
+            type=messages.MessageType.INTERACTIVE,
+            interactive=messages.interactive.InteractiveUrl(
+                body=messages.interactive.Text(text=text),
+                header=header,
                 footer=footer,
                 action=action,
             ),

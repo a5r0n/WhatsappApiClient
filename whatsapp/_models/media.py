@@ -4,6 +4,12 @@ from typing import Optional, Union
 from pydantic import RootModel, model_validator, BaseModel, Field
 
 
+def _as_dict(values):
+    if isinstance(values, BaseModel):
+        return values.model_dump(exclude_none=True)
+    return values
+
+
 class MediaTypes(str, Enum):
     IMAGE = "image"
     VIDEO = "video"
@@ -19,6 +25,7 @@ class Thumbnail(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_link_or_data(cls, values):
+        values = _as_dict(values)
         if not values.get("data") and not values.get("link"):
             raise ValueError("Either link or data must be provided")
 
@@ -35,6 +42,7 @@ class BaseMedia(BaseModel):
 
     @model_validator(mode="before")
     def validate_one_of_sources(cls, values: dict):
+        values = _as_dict(values)
         if not any([values.get("id"), values.get("link")]):
             raise ValueError(
                 "Invalid media source. one of id or link must be specified"

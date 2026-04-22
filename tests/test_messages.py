@@ -60,6 +60,31 @@ def test_message_supports_parent_business_scoped_user_id_recipients():
     assert payload["parent_user_id"] == "US.ENT.123456789"
 
 
+def test_interactive_message_serializes_under_pydantic_v2():
+    message = messages.Message(
+        to="15551234567",
+        type=messages.MessageType.INTERACTIVE,
+        interactive=messages.interactive.InteractiveButtons(
+            body=messages.interactive.Text(text="hello"),
+            action=messages.interactive.ButtonsAction(
+                buttons=[
+                    messages.interactive.Button(
+                        reply=messages.interactive.ButtonRow(
+                            id="btn-1",
+                            title="Hello",
+                        )
+                    )
+                ]
+            ),
+        ),
+    )
+
+    payload = message.model_dump(exclude_none=True)
+
+    assert payload["interactive"]["type"] == "button"
+    assert payload["interactive"]["action"]["buttons"][0]["reply"]["id"] == "btn-1"
+
+
 def test_message_requires_a_recipient_identifier():
     with pytest.raises(ValidationError):
         messages.Message(

@@ -14,6 +14,12 @@ from .media import Media
 from typing_extensions import Annotated
 
 
+def _as_dict(values):
+    if isinstance(values, BaseModel):
+        return values.model_dump(exclude_none=True)
+    return values
+
+
 class InteractiveTypes(str, Enum):
     LIST = "list"
     URL = "cta_url"
@@ -100,6 +106,7 @@ class FlowParameters(BaseModel):
 
     @model_validator(mode="before")
     def validate_payload_when_action_is_navigate(cls, values):
+        values = _as_dict(values)
         if values.get("flow_action") == "navigate" and not values.get(
             "flow_action_payload"
         ):
@@ -210,6 +217,7 @@ class Interactive(BaseModel):
 
     @model_validator(mode="before")
     def must_have_header_for_product_list(cls, values):
+        values = _as_dict(values)
         if values.get("type") == InteractiveTypes.PRODUCT_LIST and not values.get(
             "header"
         ):

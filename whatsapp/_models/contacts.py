@@ -75,6 +75,8 @@ class Contact(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def remover_none_fields(cls, values: dict):
+        if isinstance(values, BaseModel):
+            values = values.model_dump(exclude_none=True)
         return {k: v for k, v in values.items() if v}
 
 

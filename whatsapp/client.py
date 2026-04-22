@@ -1,6 +1,5 @@
 from dataclasses import field, dataclass
 from json import JSONDecodeError
-import json
 from typing import Any, Dict, List, Literal, Tuple, Union, Optional, TYPE_CHECKING
 
 from aiohttp import ClientSession, FormData, MultipartWriter
@@ -9,7 +8,7 @@ from loguru import logger
 from pydantic import BaseModel, ValidationError
 
 from whatsapp import errors, messages, responses
-from whatsapp._models.interactive import Header, HeaderTypes
+from whatsapp._models.interactive import Header
 from whatsapp._models.media import Media, MediaTypes
 
 from .config import WhatsAppConfig
@@ -46,9 +45,8 @@ class Client:
         self, method, url, response_model: BaseModel = None, **kwargs
     ) -> Union[BaseModel, Dict, str, None]:
         if data := kwargs.pop("data", {}):
-            # TODO: use custom json encoder
             if isinstance(data, BaseModel):
-                kwargs["json"] = json.loads(data.json(exclude_none=True))
+                kwargs["json"] = data.model_dump(mode="json", exclude_none=True)
                 data = None
 
         logger.debug(f"{method} {url} {list(kwargs.keys()) if kwargs else ''}")
@@ -62,10 +60,13 @@ class Client:
             except ContentTypeError:
                 json_data = None
                 text_data = await resp.text()
-                try:
-                    model_resp = response_model.parse_raw(text_data)
-                except Exception as e:
-                    logger.warning(f"Failed to parse response: {text_data[:5000]} {e}")
+                if response_model:
+                    try:
+                        model_resp = response_model.model_validate_json(text_data)
+                    except Exception as e:
+                        logger.warning(
+                            f"Failed to parse response: {text_data[:5000]} {e}"
+                        )
             except JSONDecodeError:
                 # TODO: some logging
                 json_data = {}
@@ -84,7 +85,7 @@ class Client:
                 raw_data=data_to_log,
             ).debug("Got response from server")
 
-            if response_model:
+            if response_model and json_data is not None:
                 try:
                     model_resp = response_model.model_validate(json_data)
                 except Exception as e:
@@ -92,7 +93,7 @@ class Client:
                         error=e,
                         data=json_data or text_data,
                         response=resp,
-                        model_name=response_model.__class__.__name__,
+                        model_name=response_model.__name__,
                     ).warning(f"Failed to parse response as {response_model.__name__}")
 
             if isinstance(model_resp, responses.ApiResponse):
@@ -101,7 +102,7 @@ class Client:
             logger.bind(
                 raw_data=data_to_log,
                 data=(
-                    model_resp.dict()
+                    model_resp.model_dump(mode="json")
                     if isinstance(model_resp, BaseModel)
                     else model_resp
                 ),
@@ -113,7 +114,7 @@ class Client:
                         resp.status,
                         resp.reason,
                         model_resp.error.message,
-                        model_resp.error.dict(exclude_none=True),
+                        model_resp.error.model_dump(exclude_none=True),
                     )
                 raise errors.RequestError(
                     resp.status, resp.reason, model_resp.message, model_resp.data
@@ -524,7 +525,11 @@ class Client:
         else:
             sections = [
                 messages.interactive.ProductSection(
-                    **(section if isinstance(section, dict) else section.dict())
+                    **(
+                        section
+                        if isinstance(section, dict)
+                        else section.model_dump(exclude_none=True)
+                    )
                 )
                 for section in product_items
             ]
@@ -542,10 +547,7 @@ class Client:
             type=messages.MessageType.INTERACTIVE,
             interactive=messages.interactive.InteractiveProductList(
                 body=messages.interactive.Text(text=text),
-                header=Header(
-                    type=HeaderTypes.TEXT,
-                    text=header,
-                ),
+                header=messages.interactive.TextHeader(text=header),
                 footer=footer,
                 action=action,
             ),

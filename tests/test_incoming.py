@@ -150,6 +150,37 @@ def test_status_update_supports_recipient_user_id_without_recipient_id():
     assert status.recipient_identifiers == ["US.555555555"]
 
 
+def test_status_update_supports_contacts_without_profile():
+    update = StatusUpdate.model_validate(
+        {
+            "contacts": [
+                {
+                    "wa_id": "15551234567",
+                    "user_id": "US.555555555",
+                }
+            ],
+            "statuses": [
+                {
+                    "id": "wamid.status.with-contact",
+                    "recipient_id": "15551234567",
+                    "recipient_user_id": "US.555555555",
+                    "status": "delivered",
+                    "timestamp": "1713800008",
+                }
+            ],
+        }
+    )
+
+    contact = update.contacts[0]
+    status = update.statuses[0]
+
+    assert contact.profile is None
+    assert contact.identifier == "US.555555555"
+    assert contact.identifiers == ["US.555555555", "15551234567"]
+    assert status.recipient_identifier == "US.555555555"
+    assert status.recipient_identifiers == ["US.555555555", "15551234567"]
+
+
 def test_updates_support_user_id_update_webhooks():
     update = Updates.model_validate(
         {

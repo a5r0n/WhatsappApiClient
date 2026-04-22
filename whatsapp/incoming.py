@@ -111,7 +111,7 @@ class IdentifierChange(BaseModel):
 
 
 class Contact(BaseModel):
-    profile: Profile
+    profile: Optional[Profile] = None
     wa_id: Optional[str] = None
     user_id: Optional[str] = None
     parent_user_id: Optional[str] = None

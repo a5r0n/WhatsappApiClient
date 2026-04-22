@@ -6,11 +6,12 @@ authors = ["a5r0n <a5r0n@users.noreply.github.com>"]
 packages = [{ include = "whatsapp" }]
 [tool.poetry.dependencies]
 python = "^3.8"
-driconfig = "^1.0.2"
 aiohttp = "^3.9.1"
-loguru = "^0.7.0"
+loguru = ">=0.6,<0.8"
 aioretry = "^5.0.2"
 pydantic = "^2.6.1"
+pydantic-settings = ">=2.0"
+pyyaml = ">=6.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.4.3"
@@ -28,7 +29,13 @@ version_files = [
 ]
 
 [tool.pytest.ini_options]
+addopts = "-m 'not e2e and not network and not live_config'"
 asyncio_mode = "auto"
+markers = [
+    "e2e: end-to-end tests that require a live WhatsApp server (deselect with '-m \"not e2e\"')",
+    "network: tests that require public internet access but not a live WhatsApp server",
+    "live_config: tests that require a populated local WhatsApp config file",
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

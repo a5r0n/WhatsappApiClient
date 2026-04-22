@@ -2,7 +2,7 @@ from contextvars import ContextVar
 from typing import Any, Dict, Optional, Tuple, Type
 from . import __version__
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict, PydanticBaseSettingsSource
 
 
@@ -55,6 +55,13 @@ class WhatsAppConfig(BaseSettings):
             super().__init__(**values)
         finally:
             _config_path_override.reset(token)
+
+    @field_validator("wa_id", mode="before")
+    @classmethod
+    def coerce_wa_id_to_string(cls, value):
+        if value is None:
+            return value
+        return str(value)
 
     @classmethod
     def settings_customise_sources(

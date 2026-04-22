@@ -9,6 +9,20 @@ from whatsapp._models.reaction import Reaction
 from whatsapp._models.system import System
 
 
+def _collect_identifiers(*identifiers: Optional[str]) -> List[str]:
+    values: List[str] = []
+
+    for identifier in identifiers:
+        if identifier and identifier not in values:
+            values.append(identifier)
+
+    return values
+
+
+def _first_identifier(*identifiers: Optional[str]) -> Optional[str]:
+    return next(iter(_collect_identifiers(*identifiers)), None)
+
+
 class IncomingMessageType(str, Enum):
     TEXT = "text"
     IMAGE = "image"
@@ -84,16 +98,57 @@ class Profile(BaseModel):
 
 class Contact(BaseModel):
     profile: Profile
-    wa_id: str
+    wa_id: Optional[str] = None
+    user_id: Optional[str] = None
+    parent_user_id: Optional[str] = None
 
     @classmethod
     def from_update(cls, update: "WebhookUpdate", message: BaseModel):
+        scoped_contact = next(
+            (
+                contact
+                for contact in update.contacts
+                if any(
+                    identifier in contact.scoped_user_identifiers
+                    for identifier in getattr(
+                        message, "sender_scoped_user_identifiers", []
+                    )
+                )
+            ),
+            None,
+        )
+        if scoped_contact is not None:
+            return scoped_contact
+
         return next(
-            filter(lambda contact: contact.wa_id == message.from_, update.contacts)
+            contact
+            for contact in update.contacts
+            if any(
+                identifier in contact.legacy_identifiers
+                for identifier in getattr(message, "sender_legacy_identifiers", [])
+            )
         )
 
     @property
-    def as_international(self):
+    def scoped_user_identifiers(self) -> List[str]:
+        return _collect_identifiers(self.user_id, self.parent_user_id)
+
+    @property
+    def legacy_identifiers(self) -> List[str]:
+        return _collect_identifiers(self.wa_id)
+
+    @property
+    def identifiers(self) -> List[str]:
+        return _collect_identifiers(self.user_id, self.parent_user_id, self.wa_id)
+
+    @property
+    def identifier(self) -> Optional[str]:
+        return _first_identifier(self.user_id, self.parent_user_id, self.wa_id)
+
+    @property
+    def as_international(self) -> Optional[str]:
+        if self.wa_id is None:
+            return None
         return f"+{self.wa_id}"
 
 
@@ -121,11 +176,29 @@ class Status(BaseModel):
     conversation: Optional[Conversation] = None
     pricing: Optional[Pricing] = None
     recipient_id: Optional[str] = None
+    recipient_user_id: Optional[str] = None
+    recipient_username: Optional[str] = None
     message: Optional[StatusMessage] = None
     chat_id: Optional[str] = None
     status: str
     timestamp: str
     errors: Optional[List[StatusError]] = None
+
+    @property
+    def recipient_scoped_user_identifiers(self) -> List[str]:
+        return _collect_identifiers(self.recipient_user_id)
+
+    @property
+    def recipient_legacy_identifiers(self) -> List[str]:
+        return _collect_identifiers(self.recipient_id)
+
+    @property
+    def recipient_identifiers(self) -> List[str]:
+        return _collect_identifiers(self.recipient_user_id, self.recipient_id)
+
+    @property
+    def recipient_identifier(self) -> Optional[str]:
+        return _first_identifier(self.recipient_user_id, self.recipient_id)
 
 
 class ReferredProduct(BaseModel):
@@ -150,7 +223,9 @@ class Button(BaseModel):
 class Message(BaseModel):
     id: str
     timestamp: str
-    from_: str = Field(..., alias="from")
+    from_: Optional[str] = Field(None, alias="from")
+    from_user_id: Optional[str] = None
+    from_parent_user_id: Optional[str] = None
     type: IncomingMessageType
     group_id: Optional[str] = None
     context: Optional[Context] = None
@@ -173,6 +248,26 @@ class Message(BaseModel):
 
     def media(self):
         return self.image or self.audio or self.video or self.voice
+
+    @property
+    def sender_scoped_user_identifiers(self) -> List[str]:
+        return _collect_identifiers(self.from_user_id, self.from_parent_user_id)
+
+    @property
+    def sender_legacy_identifiers(self) -> List[str]:
+        return _collect_identifiers(self.from_)
+
+    @property
+    def sender_identifiers(self) -> List[str]:
+        return _collect_identifiers(
+            self.from_user_id, self.from_parent_user_id, self.from_
+        )
+
+    @property
+    def sender_identifier(self) -> Optional[str]:
+        return _first_identifier(
+            self.from_user_id, self.from_parent_user_id, self.from_
+        )
 
 
 class PrivateMessage(Message):

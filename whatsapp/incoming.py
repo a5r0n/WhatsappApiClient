@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 import json
 from typing import Any, Dict, List, Literal, Optional, Union
@@ -6,7 +7,6 @@ from pydantic import RootModel, field_validator, ConfigDict, BaseModel, Field
 from whatsapp._models.message import Text
 from whatsapp._models.contacts import Contacts, Location
 from whatsapp._models.reaction import Reaction
-from whatsapp._models.system import System
 
 
 def _collect_identifiers(*identifiers: Optional[str]) -> List[str]:
@@ -23,6 +23,11 @@ def _first_identifier(*identifiers: Optional[str]) -> Optional[str]:
     return next(iter(_collect_identifiers(*identifiers)), None)
 
 
+IDENTIFIER_CHANGE_PATTERN = re.compile(
+    r" changed from (?P<previous>\S+) to (?P<current>\S+)$"
+)
+
+
 class IncomingMessageType(str, Enum):
     TEXT = "text"
     IMAGE = "image"
@@ -36,9 +41,9 @@ class IncomingMessageType(str, Enum):
     HSM = "hsm"
     INTERACTIVE = "interactive"
     BUTTON = "button"
+    SYSTEM = "system"
     UNKNOWN = "unknown"
     REACTION = "reaction"
-    SYSTEM = "system"
     ORDER = "order"
     REQUEST_WELCOME = "request_welcome"
 
@@ -94,6 +99,15 @@ class Sticker(Media):
 
 class Profile(BaseModel):
     name: str
+
+
+class IdentifierChange(BaseModel):
+    previous: Optional[str] = None
+    current: Optional[str] = None
+
+    @property
+    def identifiers(self) -> List[str]:
+        return _collect_identifiers(self.previous, self.current)
 
 
 class Contact(BaseModel):
@@ -220,6 +234,52 @@ class Button(BaseModel):
     payload: Optional[str] = None
 
 
+class System(BaseModel):
+    body: Optional[str] = None
+    identity: Optional[str] = None
+    new_wa_id: Optional[str] = None
+    wa_id: Optional[str] = None
+    user_id: Optional[str] = None
+    parent_user_id: Optional[str] = None
+    customer: Optional[str] = None
+    type: str
+
+    def _identifier_change_match(self):
+        if not self.body:
+            return None
+        return IDENTIFIER_CHANGE_PATTERN.search(self.body)
+
+    @property
+    def scoped_user_identifiers(self) -> List[str]:
+        return _collect_identifiers(self.user_id, self.parent_user_id)
+
+    @property
+    def legacy_identifiers(self) -> List[str]:
+        return _collect_identifiers(self.wa_id)
+
+    @property
+    def identifiers(self) -> List[str]:
+        return _collect_identifiers(self.user_id, self.parent_user_id, self.wa_id)
+
+    @property
+    def identifier(self) -> Optional[str]:
+        return _first_identifier(self.user_id, self.parent_user_id, self.wa_id)
+
+    @property
+    def identifier_change(self) -> Optional[IdentifierChange]:
+        if self.type != "user_changed_user_id":
+            return None
+
+        match = self._identifier_change_match()
+        previous = match.group("previous") if match else None
+        current_from_body = match.group("current") if match else None
+
+        return IdentifierChange(
+            previous=previous,
+            current=_first_identifier(self.user_id, self.parent_user_id, current_from_body),
+        )
+
+
 class Message(BaseModel):
     id: str
     timestamp: str
@@ -251,23 +311,47 @@ class Message(BaseModel):
 
     @property
     def sender_scoped_user_identifiers(self) -> List[str]:
-        return _collect_identifiers(self.from_user_id, self.from_parent_user_id)
+        return _collect_identifiers(
+            self.from_user_id,
+            self.from_parent_user_id,
+            self.system.user_id if self.system else None,
+            self.system.parent_user_id if self.system else None,
+        )
 
     @property
     def sender_legacy_identifiers(self) -> List[str]:
-        return _collect_identifiers(self.from_)
+        return _collect_identifiers(
+            self.from_,
+            self.system.wa_id if self.system else None,
+        )
 
     @property
     def sender_identifiers(self) -> List[str]:
         return _collect_identifiers(
-            self.from_user_id, self.from_parent_user_id, self.from_
+            self.from_user_id,
+            self.from_parent_user_id,
+            self.system.user_id if self.system else None,
+            self.system.parent_user_id if self.system else None,
+            self.from_,
+            self.system.wa_id if self.system else None,
         )
 
     @property
     def sender_identifier(self) -> Optional[str]:
         return _first_identifier(
-            self.from_user_id, self.from_parent_user_id, self.from_
+            self.from_user_id,
+            self.from_parent_user_id,
+            self.system.user_id if self.system else None,
+            self.system.parent_user_id if self.system else None,
+            self.from_,
+            self.system.wa_id if self.system else None,
         )
+
+    @property
+    def identifier_change(self) -> Optional[IdentifierChange]:
+        if self.system is None:
+            return None
+        return self.system.identifier_change
 
 
 class PrivateMessage(Message):
@@ -279,19 +363,73 @@ class GroupMessage(Message):
 
 
 class WebhookUpdate(BaseModel):
-    messages: Optional[List[Message]] = []
-    contacts: Optional[List[Contact]] = []
-    statuses: Optional[List[Status]] = []
+    messages: Optional[List[Message]] = Field(default_factory=list)
+    contacts: Optional[List[Contact]] = Field(default_factory=list)
+    statuses: Optional[List[Status]] = Field(default_factory=list)
 
 
 class MessageUpdate(WebhookUpdate):
     messages: List[Union[PrivateMessage, GroupMessage]]
-    contacts: List[Contact]
+    contacts: List[Contact] = Field(default_factory=list)
 
 
 class StatusUpdate(WebhookUpdate):
     statuses: List[Status]
 
 
-class Updates(RootModel[Union[StatusUpdate, MessageUpdate]]):
+class UserIdUpdate(BaseModel):
+    detail: str
+    timestamp: str
+    wa_id: Optional[str] = None
+    user_id: IdentifierChange
+    parent_user_id: Optional[IdentifierChange] = None
+
+    @property
+    def legacy_identifiers(self) -> List[str]:
+        return _collect_identifiers(self.wa_id)
+
+    @property
+    def previous_scoped_user_identifiers(self) -> List[str]:
+        return _collect_identifiers(
+            self.user_id.previous,
+            self.parent_user_id.previous if self.parent_user_id else None,
+        )
+
+    @property
+    def current_scoped_user_identifiers(self) -> List[str]:
+        return _collect_identifiers(
+            self.user_id.current,
+            self.parent_user_id.current if self.parent_user_id else None,
+        )
+
+    @property
+    def previous_identifier(self) -> Optional[str]:
+        return _first_identifier(
+            self.user_id.previous,
+            self.parent_user_id.previous if self.parent_user_id else None,
+        )
+
+    @property
+    def current_identifier(self) -> Optional[str]:
+        return _first_identifier(
+            self.user_id.current,
+            self.parent_user_id.current if self.parent_user_id else None,
+            self.wa_id,
+        )
+
+    @property
+    def identifier_change(self) -> IdentifierChange:
+        return self.user_id
+
+
+class UserIdUpdateWebhookUpdate(BaseModel):
+    contacts: Optional[List[Contact]] = Field(default_factory=list)
+    user_id_update: UserIdUpdate
+
+    @property
+    def identifier_change(self) -> IdentifierChange:
+        return self.user_id_update.identifier_change
+
+
+class Updates(RootModel[Union[StatusUpdate, MessageUpdate, UserIdUpdateWebhookUpdate]]):
     pass

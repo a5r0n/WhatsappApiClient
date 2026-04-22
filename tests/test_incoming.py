@@ -1,4 +1,10 @@
-from whatsapp.incoming import Contact, MessageUpdate, StatusUpdate
+from whatsapp.incoming import (
+    Contact,
+    MessageUpdate,
+    StatusUpdate,
+    Updates,
+    UserIdUpdateWebhookUpdate,
+)
 
 
 def test_message_update_supports_legacy_wa_id_only():
@@ -142,3 +148,108 @@ def test_status_update_supports_recipient_user_id_without_recipient_id():
     assert status.recipient_username == "scoped_user"
     assert status.recipient_identifier == "US.555555555"
     assert status.recipient_identifiers == ["US.555555555"]
+
+
+def test_updates_support_user_id_update_webhooks():
+    update = Updates.model_validate(
+        {
+            "contacts": [
+                {
+                    "profile": {"name": "Scoped User"},
+                    "wa_id": "15551234567",
+                    "user_id": "US.NEW.123",
+                    "parent_user_id": "US.ENT.NEW.123",
+                }
+            ],
+            "user_id_update": {
+                "wa_id": "15551234567",
+                "detail": "The user's business-scoped IDs changed.",
+                "user_id": {
+                    "previous": "US.OLD.123",
+                    "current": "US.NEW.123",
+                },
+                "parent_user_id": {
+                    "previous": "US.ENT.OLD.123",
+                    "current": "US.ENT.NEW.123",
+                },
+                "timestamp": "1713800005",
+            },
+        }
+    )
+
+    assert isinstance(update.root, UserIdUpdateWebhookUpdate)
+    assert update.root.identifier_change.previous == "US.OLD.123"
+    assert update.root.identifier_change.current == "US.NEW.123"
+    assert update.root.user_id_update.legacy_identifiers == ["15551234567"]
+    assert update.root.user_id_update.previous_scoped_user_identifiers == [
+        "US.OLD.123",
+        "US.ENT.OLD.123",
+    ]
+    assert update.root.user_id_update.current_scoped_user_identifiers == [
+        "US.NEW.123",
+        "US.ENT.NEW.123",
+    ]
+    assert update.root.user_id_update.current_identifier == "US.NEW.123"
+
+
+def test_message_update_supports_user_changed_user_id_system_messages():
+    update = MessageUpdate.model_validate(
+        {
+            "messages": [
+                {
+                    "id": "wamid.system",
+                    "timestamp": "1713800006",
+                    "from": "15551234567",
+                    "type": "system",
+                    "system": {
+                        "body": "User Scoped User changed from US.OLD.999 to US.NEW.999",
+                        "wa_id": "15551234567",
+                        "user_id": "US.NEW.999",
+                        "parent_user_id": "US.ENT.NEW.999",
+                        "type": "user_changed_user_id",
+                    },
+                }
+            ]
+        }
+    )
+
+    message = update.messages[0]
+
+    assert message.system is not None
+    assert message.system.type == "user_changed_user_id"
+    assert message.sender_identifier == "US.NEW.999"
+    assert message.sender_identifiers == [
+        "US.NEW.999",
+        "US.ENT.NEW.999",
+        "15551234567",
+    ]
+    assert message.identifier_change is not None
+    assert message.identifier_change.previous == "US.OLD.999"
+    assert message.identifier_change.current == "US.NEW.999"
+
+
+def test_message_update_preserves_legacy_system_message_parsing():
+    update = MessageUpdate.model_validate(
+        {
+            "messages": [
+                {
+                    "id": "wamid.legacy-system",
+                    "timestamp": "1713800007",
+                    "from": "16505551234",
+                    "type": "system",
+                    "system": {
+                        "body": "User changed phone number",
+                        "wa_id": "12195555358",
+                        "type": "user_changed_number",
+                    },
+                }
+            ]
+        }
+    )
+
+    message = update.messages[0]
+
+    assert message.system is not None
+    assert message.system.type == "user_changed_number"
+    assert message.sender_identifier == "16505551234"
+    assert message.identifier_change is None

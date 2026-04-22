@@ -126,11 +126,37 @@ class UploadResponse(Response):
         return self.media[0].id if self.media else None
 
 
+class MessageContact(BaseModel):
+    input: str
+    wa_id: Optional[str] = None
+    user_id: Optional[str] = None
+    parent_user_id: Optional[str] = None
+    username: Optional[str] = None
+
+    @property
+    def identifiers(self) -> List[str]:
+        identifiers: List[str] = []
+
+        for value in (self.user_id, self.parent_user_id, self.wa_id, self.input):
+            if value and value not in identifiers:
+                identifiers.append(value)
+
+        return identifiers
+
+    @property
+    def identifier(self) -> str:
+        return self.identifiers[0]
+
+
 class MessageResponse(Response):
     success: bool = True
     messaging_product: Literal["whatsapp"] = "whatsapp"
     contacts: List[Dict[str, str]]
     messages: List[Dict[str, str]]
+
+    @property
+    def contact_models(self) -> List[MessageContact]:
+        return [MessageContact.model_validate(contact) for contact in self.contacts]
 
 
 class MediaResponse(Response):

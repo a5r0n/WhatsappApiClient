@@ -295,11 +295,38 @@ class Client:
             **kwargs,
         )
 
-    async def send_text(self, to: str, text: str, *args, **kwargs):
+    @staticmethod
+    def _recipient_kwargs(
+        to: Optional[str] = None,
+        user_id: Optional[str] = None,
+        parent_user_id: Optional[str] = None,
+    ) -> Dict[str, str]:
+        recipient_kwargs: Dict[str, str] = {}
+
+        if to is not None:
+            recipient_kwargs["to"] = to
+        if user_id is not None:
+            recipient_kwargs["user_id"] = user_id
+        if parent_user_id is not None:
+            recipient_kwargs["parent_user_id"] = parent_user_id
+
+        return recipient_kwargs
+
+    async def send_text(
+        self,
+        to: Optional[str] = None,
+        text: str = None,
+        *args,
+        user_id: Optional[str] = None,
+        parent_user_id: Optional[str] = None,
+        **kwargs,
+    ):
         message = messages.Message(
-            to=to,
             type=messages.MessageType.TEXT,
             text=messages.Text(body=text),
+            **self._recipient_kwargs(
+                to=to, user_id=user_id, parent_user_id=parent_user_id
+            ),
             # TODO: include kwargs
             **{},
         )
@@ -307,14 +334,16 @@ class Client:
 
     async def send_buttons(
         self,
-        to: str,
-        text: str,
-        buttons: List[Tuple[str, str]],
+        to: Optional[str] = None,
+        text: str = None,
+        buttons: List[Tuple[str, str]] = None,
+        *,
+        user_id: Optional[str] = None,
+        parent_user_id: Optional[str] = None,
         header: Optional["Header"] = None,
         footer: Optional["Text"] = None,
     ):
         message = messages.Message(
-            to=to,
             type=messages.MessageType.INTERACTIVE,
             interactive=messages.interactive.InteractiveButtons(
                 body=messages.interactive.Text(text=text),
@@ -332,23 +361,28 @@ class Client:
                     ]
                 ),
             ),
+            **self._recipient_kwargs(
+                to=to, user_id=user_id, parent_user_id=parent_user_id
+            ),
         )
         return await self.send(data=message)
 
     async def send_list(
         self,
-        to: str,
-        text: str,
-        title: str,
-        buttons: List[Tuple[str, str]],
+        to: Optional[str] = None,
+        text: str = None,
+        title: str = None,
+        buttons: List[Tuple[str, str]] = None,
         button: str = None,
+        *,
+        user_id: Optional[str] = None,
+        parent_user_id: Optional[str] = None,
         header: Optional["Header"] = None,
         footer: Optional["Text"] = None,
     ):
         button = button or title
 
         message = messages.Message(
-            to=to,
             type=messages.MessageType.INTERACTIVE,
             interactive=messages.interactive.InteractiveList(
                 body=messages.interactive.Text(text=text),
@@ -370,6 +404,9 @@ class Client:
                         )
                     ],
                 ),
+            ),
+            **self._recipient_kwargs(
+                to=to, user_id=user_id, parent_user_id=parent_user_id
             ),
         )
         return await self.send(data=message)
@@ -538,7 +575,15 @@ class Client:
         return await self.send(data=message)
 
     async def send_media(
-        self, to, type: str, media_id=None, media_link=None, *args, **kwargs
+        self,
+        to=None,
+        type: str = None,
+        media_id=None,
+        media_link=None,
+        *args,
+        user_id: Optional[str] = None,
+        parent_user_id: Optional[str] = None,
+        **kwargs,
     ):
         try:
             media = messages.Media.model_validate(
@@ -555,9 +600,11 @@ class Client:
 
         message = messages.Message.model_validate(
             {
-                "to": to,
                 "type": type,
                 type: media,
+                **self._recipient_kwargs(
+                    to=to, user_id=user_id, parent_user_id=parent_user_id
+                ),
             }
         )
         return await self.send(data=message, *args, **kwargs)

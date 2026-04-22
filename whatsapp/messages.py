@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Literal, Optional, Union
-from pydantic import ConfigDict, BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from whatsapp._models.contacts import Contact, Contacts
 from whatsapp._models.message import MessageType, Text
 
@@ -20,6 +20,20 @@ from whatsapp._models.template import (
     TemplateLanguage,
 )
 from whatsapp._models import interactive, media, message
+
+
+def _collect_recipient_identifiers(*identifiers: Optional[str]) -> List[str]:
+    values: List[str] = []
+
+    for identifier in identifiers:
+        if identifier and identifier not in values:
+            values.append(identifier)
+
+    return values
+
+
+def _first_recipient_identifier(*identifiers: Optional[str]) -> Optional[str]:
+    return next(iter(_collect_recipient_identifiers(*identifiers)), None)
 
 
 class AccountInfo(BaseModel):
@@ -48,7 +62,14 @@ class Context(BaseModel):
 class Message(BaseModel):
     messaging_product: str = "whatsapp"
     type: MessageType
-    to: str
+    to: Optional[str] = None
+    user_id: Optional[str] = Field(
+        None, description="Business-scoped user ID used as the message recipient."
+    )
+    parent_user_id: Optional[str] = Field(
+        None,
+        description="Parent business-scoped user ID used as the message recipient.",
+    )
     id: Optional[str] = Field(
         None,
         description="The message ID for message to send. available only in unofficial api",
@@ -100,3 +121,31 @@ class Message(BaseModel):
         ),
     )
     model_config = ConfigDict(use_enum_values=True)
+
+    @model_validator(mode="after")
+    def validate_recipient(self):
+        if self.user_id and self.parent_user_id:
+            raise ValueError(
+                "Only one of user_id or parent_user_id can be specified"
+            )
+
+        if not self.recipient_identifiers:
+            raise ValueError("One of to, user_id, or parent_user_id must be specified")
+
+        return self
+
+    @property
+    def recipient_scoped_user_identifiers(self) -> List[str]:
+        return _collect_recipient_identifiers(self.user_id, self.parent_user_id)
+
+    @property
+    def recipient_legacy_identifiers(self) -> List[str]:
+        return _collect_recipient_identifiers(self.to)
+
+    @property
+    def recipient_identifiers(self) -> List[str]:
+        return _collect_recipient_identifiers(self.user_id, self.parent_user_id, self.to)
+
+    @property
+    def recipient_identifier(self) -> Optional[str]:
+        return _first_recipient_identifier(self.user_id, self.parent_user_id, self.to)

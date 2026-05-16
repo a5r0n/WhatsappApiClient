@@ -284,3 +284,33 @@ def test_message_update_preserves_legacy_system_message_parsing():
     assert message.system.type == "user_changed_number"
     assert message.sender_identifier == "16505551234"
     assert message.identifier_change is None
+
+
+def test_incoming_contacts_message_parses_vcard_and_origin():
+    from whatsapp._models.contacts import Contact
+
+    contact = Contact.model_validate(
+        {
+            "vcard": "BEGIN:VCARD\nVERSION:3.0\nFN:Alice\nEND:VCARD",
+            "origin": "contact_request",
+            "phones": [
+                {
+                    "type": "CELL",
+                    "phone": "+15551234567",
+                    "wa_id": "15551234567",
+                }
+            ],
+        }
+    )
+
+    assert contact.vcard.startswith("BEGIN:VCARD")
+    assert contact.origin == "contact_request"
+    assert contact.phones[0].wa_id == "15551234567"
+
+
+def test_incoming_contacts_message_accepts_other_origin():
+    from whatsapp._models.contacts import Contact
+
+    contact = Contact.model_validate({"origin": "other", "phones": []})
+
+    assert contact.origin == "other"

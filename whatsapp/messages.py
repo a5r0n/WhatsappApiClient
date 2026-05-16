@@ -64,12 +64,12 @@ class Message(BaseModel):
     messaging_product: str = "whatsapp"
     type: MessageType
     to: Optional[str] = None
-    user_id: Optional[str] = Field(
-        None, description="Business-scoped user ID used as the message recipient."
-    )
-    parent_user_id: Optional[str] = Field(
+    recipient: Optional[str] = Field(
         None,
-        description="Parent business-scoped user ID used as the message recipient.",
+        description=(
+            "Business-scoped user ID (BSUID) recipient. "
+            "Used when the recipient has no phone-based wa_id."
+        ),
     )
     id: Optional[str] = Field(
         None,
@@ -126,28 +126,15 @@ class Message(BaseModel):
 
     @model_validator(mode="after")
     def validate_recipient(self):
-        if self.user_id and self.parent_user_id:
-            raise ValueError(
-                "Only one of user_id or parent_user_id can be specified"
-            )
-
         if not self.recipient_identifiers:
-            raise ValueError("One of to, user_id, or parent_user_id must be specified")
+            raise ValueError("One of to or recipient must be specified")
 
         return self
 
     @property
-    def recipient_scoped_user_identifiers(self) -> List[str]:
-        return _collect_recipient_identifiers(self.user_id, self.parent_user_id)
-
-    @property
-    def recipient_legacy_identifiers(self) -> List[str]:
-        return _collect_recipient_identifiers(self.to)
-
-    @property
     def recipient_identifiers(self) -> List[str]:
-        return _collect_recipient_identifiers(self.user_id, self.parent_user_id, self.to)
+        return _collect_recipient_identifiers(self.recipient, self.to)
 
     @property
     def recipient_identifier(self) -> Optional[str]:
-        return _first_recipient_identifier(self.user_id, self.parent_user_id, self.to)
+        return _first_recipient_identifier(self.recipient, self.to)

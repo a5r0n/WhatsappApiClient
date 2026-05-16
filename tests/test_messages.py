@@ -18,7 +18,7 @@ def test_message_supports_phone_number_recipients():
 
 def test_message_supports_business_scoped_user_id_recipients():
     message = messages.Message(
-        user_id="US.123456789",
+        recipient="US.123456789",
         type=messages.MessageType.TEXT,
         text=messages.Text(body="hello"),
     )
@@ -27,14 +27,14 @@ def test_message_supports_business_scoped_user_id_recipients():
 
     assert message.recipient_identifier == "US.123456789"
     assert message.recipient_identifiers == ["US.123456789"]
-    assert payload["user_id"] == "US.123456789"
+    assert payload["recipient"] == "US.123456789"
     assert "to" not in payload
 
 
 def test_message_supports_phone_number_and_business_scoped_user_id_recipients():
     message = messages.Message(
         to="15551234567",
-        user_id="US.123456789",
+        recipient="US.123456789",
         type=messages.MessageType.TEXT,
         text=messages.Text(body="hello"),
     )
@@ -43,21 +43,7 @@ def test_message_supports_phone_number_and_business_scoped_user_id_recipients():
 
     assert message.recipient_identifiers == ["US.123456789", "15551234567"]
     assert payload["to"] == "15551234567"
-    assert payload["user_id"] == "US.123456789"
-
-
-def test_message_supports_parent_business_scoped_user_id_recipients():
-    message = messages.Message(
-        parent_user_id="US.ENT.123456789",
-        type=messages.MessageType.TEXT,
-        text=messages.Text(body="hello"),
-    )
-
-    payload = message.model_dump(exclude_none=True)
-
-    assert message.recipient_identifier == "US.ENT.123456789"
-    assert message.recipient_identifiers == ["US.ENT.123456789"]
-    assert payload["parent_user_id"] == "US.ENT.123456789"
+    assert payload["recipient"] == "US.123456789"
 
 
 def test_interactive_message_serializes_under_pydantic_v2():
@@ -93,16 +79,6 @@ def test_message_requires_a_recipient_identifier():
         )
 
 
-def test_message_rejects_user_and_parent_business_scoped_user_ids_together():
-    with pytest.raises(ValidationError):
-        messages.Message(
-            user_id="US.123456789",
-            parent_user_id="US.ENT.123456789",
-            type=messages.MessageType.TEXT,
-            text=messages.Text(body="hello"),
-        )
-
-
 @pytest.mark.asyncio
 async def test_client_send_text_supports_business_scoped_user_ids(monkeypatch):
     client = WhatsAppClient(
@@ -118,11 +94,11 @@ async def test_client_send_text_supports_business_scoped_user_ids(monkeypatch):
     monkeypatch.setattr(client, "send", fake_send)
 
     try:
-        message = await client.send_text(text="hello", user_id="US.123456789")
+        message = await client.send_text(text="hello", recipient="US.123456789")
     finally:
         await client.session.close()
 
-    assert message.user_id == "US.123456789"
+    assert message.recipient == "US.123456789"
     assert message.to is None
     assert captured["data"].recipient_identifier == "US.123456789"
 
@@ -148,19 +124,19 @@ async def test_client_send_media_supports_parent_business_scoped_user_ids(
             None,
             type="image",
             media_id="media-123",
-            parent_user_id="US.ENT.123456789",
+            recipient="US.ENT.123456789",
         )
     finally:
         await client.session.close()
 
-    assert message.parent_user_id == "US.ENT.123456789"
+    assert message.recipient == "US.ENT.123456789"
     assert message.to is None
     assert captured["data"].recipient_identifier == "US.ENT.123456789"
 
 
 def test_interactive_contact_request_serializes_to_meta_shape():
     message = messages.Message(
-        user_id="US.123456789",
+        recipient="US.123456789",
         type=messages.MessageType.INTERACTIVE,
         interactive=messages.interactive.InteractiveContactRequest(
             body=messages.interactive.Text(text="Share your number with us"),
@@ -175,7 +151,7 @@ def test_interactive_contact_request_serializes_to_meta_shape():
     assert payload["interactive"]["action"] == {"name": "request_contact_info"}
     assert "header" not in payload["interactive"]
     assert "footer" not in payload["interactive"]
-    assert payload["user_id"] == "US.123456789"
+    assert payload["recipient"] == "US.123456789"
 
 
 def test_interactive_contact_request_action_name_is_fixed():
@@ -185,7 +161,7 @@ def test_interactive_contact_request_action_name_is_fixed():
 
 def test_message_validates_contact_request_via_interactive_union():
     payload = {
-        "user_id": "US.123456789",
+        "recipient": "US.123456789",
         "type": "interactive",
         "interactive": {
             "type": "request_contact_info",

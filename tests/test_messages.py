@@ -156,3 +156,60 @@ async def test_client_send_media_supports_parent_business_scoped_user_ids(
     assert message.parent_user_id == "US.ENT.123456789"
     assert message.to is None
     assert captured["data"].recipient_identifier == "US.ENT.123456789"
+
+
+def test_interactive_contact_request_serializes_to_meta_shape():
+    message = messages.Message(
+        user_id="US.123456789",
+        type=messages.MessageType.INTERACTIVE,
+        interactive=messages.interactive.InteractiveContactRequest(
+            body=messages.interactive.Text(text="Share your number with us"),
+            action=messages.interactive.ContactRequestAction(),
+        ),
+    )
+
+    payload = message.model_dump(exclude_none=True)
+
+    assert payload["interactive"]["type"] == "contact_request"
+    assert payload["interactive"]["body"] == {"text": "Share your number with us"}
+    assert payload["interactive"]["action"] == {"name": "request_contact_info"}
+    assert "header" not in payload["interactive"]
+    assert "footer" not in payload["interactive"]
+    assert payload["user_id"] == "US.123456789"
+
+
+def test_interactive_contact_request_action_name_is_fixed():
+    with pytest.raises(ValidationError):
+        messages.interactive.ContactRequestAction(name="something_else")
+
+
+def test_message_validates_contact_request_via_interactive_union():
+    payload = {
+        "user_id": "US.123456789",
+        "type": "interactive",
+        "interactive": {
+            "type": "contact_request",
+            "body": {"text": "Share your number with us"},
+            "action": {"name": "request_contact_info"},
+        },
+    }
+
+    message = messages.Message.model_validate(payload)
+
+    assert isinstance(
+        message.interactive, messages.interactive.InteractiveContactRequest
+    )
+
+
+def test_contact_request_action_resolves_to_correct_type_in_union():
+    from whatsapp._models import interactive
+
+    parsed = interactive.Interactive.model_validate(
+        {
+            "type": "contact_request",
+            "body": {"text": "hi"},
+            "action": {"name": "request_contact_info"},
+        }
+    )
+
+    assert isinstance(parsed.action, interactive.ContactRequestAction)

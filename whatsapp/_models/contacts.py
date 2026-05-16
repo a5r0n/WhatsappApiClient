@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Literal, Optional
 from pydantic import RootModel, model_validator, BaseModel, Field
 
 
@@ -70,6 +70,21 @@ class Contact(BaseModel):
     phones: Optional[List[Phone]] = Field(None, description="Contact phone number(s)")
     urls: Optional[List[Url]] = Field(None, description="Contact URL(s)")
     contact_image: Optional[str] = Field(None, description="Contact image")
+    vcard: Optional[str] = Field(
+        None,
+        description=(
+            "Virtual contact card. Present when the user shared a contact directly"
+            " (origin=other); omitted when origin=contact_request."
+        ),
+    )
+    origin: Optional[Literal["contact_request", "other"]] = Field(
+        None,
+        description=(
+            "How the contact information was shared."
+            " contact_request = user tapped a REQUEST_CONTACT_INFO button."
+            " other = user shared a contact directly in the chat."
+        ),
+    )
 
     # TODO: #69 move to base model
     @model_validator(mode="before")

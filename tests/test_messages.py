@@ -170,7 +170,7 @@ def test_interactive_contact_request_serializes_to_meta_shape():
 
     payload = message.model_dump(exclude_none=True)
 
-    assert payload["interactive"]["type"] == "contact_request"
+    assert payload["interactive"]["type"] == "request_contact_info"
     assert payload["interactive"]["body"] == {"text": "Share your number with us"}
     assert payload["interactive"]["action"] == {"name": "request_contact_info"}
     assert "header" not in payload["interactive"]
@@ -188,7 +188,7 @@ def test_message_validates_contact_request_via_interactive_union():
         "user_id": "US.123456789",
         "type": "interactive",
         "interactive": {
-            "type": "contact_request",
+            "type": "request_contact_info",
             "body": {"text": "Share your number with us"},
             "action": {"name": "request_contact_info"},
         },
@@ -206,7 +206,7 @@ def test_contact_request_action_resolves_to_correct_type_in_union():
 
     parsed = interactive.Interactive.model_validate(
         {
-            "type": "contact_request",
+            "type": "request_contact_info",
             "body": {"text": "hi"},
             "action": {"name": "request_contact_info"},
         }

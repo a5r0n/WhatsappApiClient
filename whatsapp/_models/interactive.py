@@ -28,7 +28,7 @@ class InteractiveTypes(str, Enum):
     PRODUCT_LIST = "product_list"
     FLOW = "flow"
     CATALOG_MESSAGE = "catalog_message"
-    CONTACT_REQUEST = "contact_request"
+    CONTACT_REQUEST = "request_contact_info"
 
 
 class HeaderTypes(str, Enum):

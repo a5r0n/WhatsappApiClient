@@ -311,6 +311,6 @@ def test_incoming_contacts_message_parses_vcard_and_origin():
 def test_incoming_contacts_message_accepts_other_origin():
     from whatsapp._models.contacts import Contact
 
-    contact = Contact.model_validate({"origin": "other", "phones": []})
+    contact = Contact.model_validate({"origin": "other"})
 
     assert contact.origin == "other"

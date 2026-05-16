@@ -28,6 +28,7 @@ class InteractiveTypes(str, Enum):
     PRODUCT_LIST = "product_list"
     FLOW = "flow"
     CATALOG_MESSAGE = "catalog_message"
+    CONTACT_REQUEST = "contact_request"
 
 
 class HeaderTypes(str, Enum):
@@ -199,6 +200,10 @@ class UrlAction(Action):
         return cls(parameters=UrlParameters(url=url, display_text=display_text))
 
 
+class ContactRequestAction(Action):
+    name: Literal["request_contact_info"] = "request_contact_info"
+
+
 class Interactive(BaseModel):
     type: InteractiveTypes
     body: Text
@@ -212,6 +217,7 @@ class Interactive(BaseModel):
         ProductAction,
         CatalogMessageAction,
         UrlAction,
+        ContactRequestAction,
     ]
     model_config = ConfigDict(use_enum_values=True)
 
@@ -261,3 +267,10 @@ class InteractiveCatalogMessage(Interactive):
 class InteractiveUrl(Interactive):
     type: InteractiveTypes = InteractiveTypes.URL
     action: UrlAction
+
+
+class InteractiveContactRequest(Interactive):
+    type: InteractiveTypes = InteractiveTypes.CONTACT_REQUEST
+    header: Literal[None] = None
+    footer: Literal[None] = None
+    action: ContactRequestAction

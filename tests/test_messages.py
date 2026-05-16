@@ -181,3 +181,35 @@ def test_interactive_contact_request_serializes_to_meta_shape():
 def test_interactive_contact_request_action_name_is_fixed():
     with pytest.raises(ValidationError):
         messages.interactive.ContactRequestAction(name="something_else")
+
+
+def test_message_validates_contact_request_via_interactive_union():
+    payload = {
+        "user_id": "US.123456789",
+        "type": "interactive",
+        "interactive": {
+            "type": "contact_request",
+            "body": {"text": "Share your number with us"},
+            "action": {"name": "request_contact_info"},
+        },
+    }
+
+    message = messages.Message.model_validate(payload)
+
+    assert isinstance(
+        message.interactive, messages.interactive.InteractiveContactRequest
+    )
+
+
+def test_contact_request_action_resolves_to_correct_type_in_union():
+    from whatsapp._models import interactive
+
+    parsed = interactive.Interactive.model_validate(
+        {
+            "type": "contact_request",
+            "body": {"text": "hi"},
+            "action": {"name": "request_contact_info"},
+        }
+    )
+
+    assert isinstance(parsed.action, interactive.ContactRequestAction)

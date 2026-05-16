@@ -215,9 +215,9 @@ class Interactive(BaseModel):
         FlowAction,
         ProductListAction,
         ProductAction,
+        ContactRequestAction,
         CatalogMessageAction,
         UrlAction,
-        ContactRequestAction,
     ]
     model_config = ConfigDict(use_enum_values=True)
 

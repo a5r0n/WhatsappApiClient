@@ -165,7 +165,7 @@ class MediaResponse(Response):
     url: str
     mime_type: str
     sha256: str
-    file_size: str
+    file_size: int
     id: str
 
 

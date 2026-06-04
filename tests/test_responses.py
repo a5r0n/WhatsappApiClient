@@ -50,3 +50,49 @@ def test_messages_response_supports_business_scoped_user_ids():
     assert response.contact_models[0].parent_user_id == "US.ENT.123456789"
     assert response.contact_models[0].username == "scoped_user"
     assert response.contact_models[0].identifier == "US.123456789"
+
+
+def test_media_response_accepts_graph_api_integer_file_size():
+    response = responses.MediaResponse.model_validate(
+        {
+            "id": "974888005314047",
+            "messaging_product": "whatsapp",
+            "url": "https://lookaside.fbsbx.com/whatsapp_business/attachments/974888005314047",
+            "mime_type": "image/jpeg",
+            "sha256": "088bae189dedac6c9c91286c31eb5df50a08da452f246a75802ba1ce6252d6d7",
+            "file_size": 85175,
+        }
+    )
+
+    assert response.file_size == 85175
+
+
+def test_media_response_accepts_legacy_string_file_size():
+    response = responses.MediaResponse.model_validate(
+        {
+            "id": "974888005314047",
+            "messaging_product": "whatsapp",
+            "url": "https://lookaside.fbsbx.com/whatsapp_business/attachments/974888005314047",
+            "mime_type": "image/jpeg",
+            "sha256": "088bae189dedac6c9c91286c31eb5df50a08da452f246a75802ba1ce6252d6d7",
+            "file_size": "85175",
+        }
+    )
+
+    assert response.file_size == 85175
+
+
+def test_api_response_detects_media_response_with_integer_file_size():
+    response = responses.ApiResponse.model_validate(
+        {
+            "id": "974888005314047",
+            "messaging_product": "whatsapp",
+            "url": "https://lookaside.fbsbx.com/whatsapp_business/attachments/974888005314047",
+            "mime_type": "image/jpeg",
+            "sha256": "088bae189dedac6c9c91286c31eb5df50a08da452f246a75802ba1ce6252d6d7",
+            "file_size": 85175,
+        }
+    ).root
+
+    assert isinstance(response, responses.MediaResponse)
+    assert response.file_size == 85175

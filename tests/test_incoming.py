@@ -314,3 +314,97 @@ def test_incoming_contacts_message_accepts_other_origin():
     contact = Contact.model_validate({"origin": "other"})
 
     assert contact.origin == "other"
+
+
+def test_message_update_parses_click_to_whatsapp_referral():
+    update = MessageUpdate.model_validate(
+        {
+            "messages": [
+                {
+                    "from": "16505551234",
+                    "id": "wamid.referral",
+                    "timestamp": "1700000000",
+                    "type": "text",
+                    "text": {"body": "Interested!"},
+                    "referral": {
+                        "source_url": "https://fb.me/AD_URL",
+                        "source_id": "120210000000000000",
+                        "source_type": "ad",
+                        "headline": "Our Sale",
+                        "body": "50% off",
+                        "media_type": "image",
+                        "image_url": "https://example.com/i.jpg",
+                        "thumbnail_url": "https://example.com/t.jpg",
+                        "ctwa_clid": "AfezABC123xyz",
+                    },
+                }
+            ]
+        }
+    )
+
+    message = update.messages[0]
+
+    assert message.referral is not None
+    assert message.referral.source_url == "https://fb.me/AD_URL"
+    assert message.referral.source_id == "120210000000000000"
+    assert message.referral.source_type == "ad"
+    assert message.referral.headline == "Our Sale"
+    assert message.referral.body == "50% off"
+    assert message.referral.media_type == "image"
+    assert message.referral.image_url == "https://example.com/i.jpg"
+    assert message.referral.video_url is None
+    assert message.referral.thumbnail_url == "https://example.com/t.jpg"
+    assert message.referral.ctwa_clid == "AfezABC123xyz"
+
+
+def test_message_update_without_referral_leaves_referral_none():
+    update = MessageUpdate.model_validate(
+        {
+            "messages": [
+                {
+                    "from": "16505551234",
+                    "id": "wamid.no-referral",
+                    "timestamp": "1700000001",
+                    "type": "text",
+                    "text": {"body": "hello"},
+                }
+            ]
+        }
+    )
+
+    assert update.messages[0].referral is None
+
+
+def test_message_update_parses_partial_referral():
+    update = MessageUpdate.model_validate(
+        {
+            "messages": [
+                {
+                    "from": "16505551234",
+                    "id": "wamid.partial-referral",
+                    "timestamp": "1700000002",
+                    "type": "text",
+                    "text": {"body": "Interested!"},
+                    "referral": {
+                        "source_type": "post",
+                        "source_id": "120210000000000001",
+                        "ctwa_clid": "AfezPartial456",
+                    },
+                }
+            ]
+        }
+    )
+
+    referral = update.messages[0].referral
+
+    assert referral is not None
+    assert referral.source_type == "post"
+    assert referral.source_id == "120210000000000001"
+    assert referral.ctwa_clid == "AfezPartial456"
+    assert referral.source_url is None
+    assert referral.headline is None
+    assert referral.body is None
+    assert referral.media_type is None
+    assert referral.image_url is None
+    assert referral.video_url is None
+    assert referral.thumbnail_url is None

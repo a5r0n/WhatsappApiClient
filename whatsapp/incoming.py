@@ -229,6 +229,19 @@ class Context(BaseModel):
     mentions: Optional[List[str]] = None
 
 
+class Referral(BaseModel):
+    source_type: Optional[str] = None
+    source_id: Optional[str] = None
+    source_url: Optional[str] = None
+    headline: Optional[str] = None
+    body: Optional[str] = None
+    media_type: Optional[str] = None
+    image_url: Optional[str] = None
+    video_url: Optional[str] = None
+    thumbnail_url: Optional[str] = None
+    ctwa_clid: Optional[str] = None
+
+
 class Button(BaseModel):
     text: str
     payload: Optional[str] = None
@@ -289,6 +302,7 @@ class Message(BaseModel):
     type: IncomingMessageType
     group_id: Optional[str] = None
     context: Optional[Context] = None
+    referral: Optional[Referral] = None
 
     text: Optional[Text] = None
     image: Optional[Media] = None

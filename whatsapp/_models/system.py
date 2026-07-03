@@ -3,9 +3,9 @@ from typing import Optional, Literal
 
 
 class System(BaseModel):
-    body: Optional[str]
-    identity: Optional[str]
-    new_wa_id: Optional[str]
-    wa_id: Optional[str]
+    body: Optional[str] = None
+    identity: Optional[str] = None
+    new_wa_id: Optional[str] = None
+    wa_id: Optional[str] = None
     type: Literal["customer_changed_number", "customer_identity_changed"]
-    customer: Optional[str]
+    customer: Optional[str] = None

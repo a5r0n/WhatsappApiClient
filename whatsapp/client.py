@@ -1,7 +1,5 @@
 from dataclasses import field, dataclass
-import io
 from json import JSONDecodeError
-import json
 from typing import Any, Dict, List, Literal, Tuple, Union, Optional, TYPE_CHECKING
 
 from aiohttp import ClientSession, FormData, MultipartWriter
@@ -10,7 +8,7 @@ from loguru import logger
 from pydantic import BaseModel, ValidationError
 
 from whatsapp import errors, messages, responses
-from whatsapp._models.interactive import Header, HeaderTypes
+from whatsapp._models.interactive import Header
 from whatsapp._models.media import Media, MediaTypes
 
 from .config import WhatsAppConfig
@@ -47,9 +45,8 @@ class Client:
         self, method, url, response_model: BaseModel = None, **kwargs
     ) -> Union[BaseModel, Dict, str, None]:
         if data := kwargs.pop("data", {}):
-            # TODO: use custom json encoder
             if isinstance(data, BaseModel):
-                kwargs["json"] = json.loads(data.json(exclude_none=True))
+                kwargs["json"] = data.model_dump(mode="json", exclude_none=True)
                 data = None
 
         logger.debug(f"{method} {url} {list(kwargs.keys()) if kwargs else ''}")
@@ -63,10 +60,13 @@ class Client:
             except ContentTypeError:
                 json_data = None
                 text_data = await resp.text()
-                try:
-                    model_resp = response_model.parse_raw(text_data)
-                except Exception as e:
-                    logger.warning(f"Failed to parse response: {text_data[:5000]} {e}")
+                if response_model:
+                    try:
+                        model_resp = response_model.model_validate_json(text_data)
+                    except Exception as e:
+                        logger.warning(
+                            f"Failed to parse response: {text_data[:5000]} {e}"
+                        )
             except JSONDecodeError:
                 # TODO: some logging
                 json_data = {}
@@ -85,24 +85,24 @@ class Client:
                 raw_data=data_to_log,
             ).debug("Got response from server")
 
-            if response_model:
+            if response_model and json_data is not None:
                 try:
-                    model_resp = response_model.parse_obj(json_data)
+                    model_resp = response_model.model_validate(json_data)
                 except Exception as e:
                     logger.bind(
                         error=e,
                         data=json_data or text_data,
                         response=resp,
-                        model_name=response_model.__class__.__name__,
+                        model_name=response_model.__name__,
                     ).warning(f"Failed to parse response as {response_model.__name__}")
 
             if isinstance(model_resp, responses.ApiResponse):
-                model_resp = model_resp.__root__
+                model_resp = model_resp.root
 
             logger.bind(
                 raw_data=data_to_log,
                 data=(
-                    model_resp.dict()
+                    model_resp.model_dump(mode="json")
                     if isinstance(model_resp, BaseModel)
                     else model_resp
                 ),
@@ -114,7 +114,7 @@ class Client:
                         resp.status,
                         resp.reason,
                         model_resp.error.message,
-                        model_resp.error.dict(exclude_none=True),
+                        model_resp.error.model_dump(exclude_none=True),
                     )
                 raise errors.RequestError(
                     resp.status, resp.reason, model_resp.message, model_resp.data
@@ -296,11 +296,32 @@ class Client:
             **kwargs,
         )
 
-    async def send_text(self, to: str, text: str, *args, **kwargs):
+    @staticmethod
+    def _recipient_kwargs(
+        to: Optional[str] = None,
+        recipient: Optional[str] = None,
+    ) -> Dict[str, str]:
+        recipient_kwargs: Dict[str, str] = {}
+
+        if to is not None:
+            recipient_kwargs["to"] = to
+        if recipient is not None:
+            recipient_kwargs["recipient"] = recipient
+
+        return recipient_kwargs
+
+    async def send_text(
+        self,
+        to: Optional[str] = None,
+        text: str = None,
+        *args,
+        recipient: Optional[str] = None,
+        **kwargs,
+    ):
         message = messages.Message(
-            to=to,
             type=messages.MessageType.TEXT,
             text=messages.Text(body=text),
+            **self._recipient_kwargs(to=to, recipient=recipient),
             # TODO: include kwargs
             **{},
         )
@@ -308,14 +329,15 @@ class Client:
 
     async def send_buttons(
         self,
-        to: str,
-        text: str,
-        buttons: List[Tuple[str, str]],
+        to: Optional[str] = None,
+        text: str = None,
+        buttons: List[Tuple[str, str]] = None,
+        *,
+        recipient: Optional[str] = None,
         header: Optional["Header"] = None,
         footer: Optional["Text"] = None,
     ):
         message = messages.Message(
-            to=to,
             type=messages.MessageType.INTERACTIVE,
             interactive=messages.interactive.InteractiveButtons(
                 body=messages.interactive.Text(text=text),
@@ -333,23 +355,25 @@ class Client:
                     ]
                 ),
             ),
+            **self._recipient_kwargs(to=to, recipient=recipient),
         )
         return await self.send(data=message)
 
     async def send_list(
         self,
-        to: str,
-        text: str,
-        title: str,
-        buttons: List[Tuple[str, str]],
+        to: Optional[str] = None,
+        text: str = None,
+        title: str = None,
+        buttons: List[Tuple[str, str]] = None,
         button: str = None,
+        *,
+        recipient: Optional[str] = None,
         header: Optional["Header"] = None,
         footer: Optional["Text"] = None,
     ):
         button = button or title
 
         message = messages.Message(
-            to=to,
             type=messages.MessageType.INTERACTIVE,
             interactive=messages.interactive.InteractiveList(
                 body=messages.interactive.Text(text=text),
@@ -372,6 +396,7 @@ class Client:
                     ],
                 ),
             ),
+            **self._recipient_kwargs(to=to, recipient=recipient),
         )
         return await self.send(data=message)
 
@@ -488,7 +513,11 @@ class Client:
         else:
             sections = [
                 messages.interactive.ProductSection(
-                    **(section if isinstance(section, dict) else section.dict())
+                    **(
+                        section
+                        if isinstance(section, dict)
+                        else section.model_dump(exclude_none=True)
+                    )
                 )
                 for section in product_items
             ]
@@ -506,10 +535,7 @@ class Client:
             type=messages.MessageType.INTERACTIVE,
             interactive=messages.interactive.InteractiveProductList(
                 body=messages.interactive.Text(text=text),
-                header=Header(
-                    type=HeaderTypes.TEXT,
-                    text=header,
-                ),
+                header=messages.interactive.TextHeader(text=header),
                 footer=footer,
                 action=action,
             ),
@@ -539,10 +565,17 @@ class Client:
         return await self.send(data=message)
 
     async def send_media(
-        self, to, type: str, media_id=None, media_link=None, *args, **kwargs
+        self,
+        to=None,
+        type: str = None,
+        media_id=None,
+        media_link=None,
+        *args,
+        recipient: Optional[str] = None,
+        **kwargs,
     ):
         try:
-            media = messages.Media.parse_obj(
+            media = messages.Media.model_validate(
                 {
                     "type": type,
                     "id": media_id,
@@ -554,11 +587,11 @@ class Client:
         except ValidationError:
             raise ValueError("Either media_id or media_link must be specified")
 
-        message = messages.Message.parse_obj(
+        message = messages.Message.model_validate(
             {
-                "to": to,
                 "type": type,
                 type: media,
+                **self._recipient_kwargs(to=to, recipient=recipient),
             }
         )
         return await self.send(data=message, *args, **kwargs)

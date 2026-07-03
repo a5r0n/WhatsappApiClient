@@ -1,5 +1,5 @@
-from typing import Dict, List, Literal, Optional, Union
-from pydantic import BaseModel, Field, root_validator
+from typing import List, Literal, Optional
+from pydantic import RootModel, model_validator, BaseModel, Field
 
 
 class Address(BaseModel):
@@ -16,7 +16,7 @@ class Address(BaseModel):
 
 class Email(BaseModel):
     email: str
-    type: Optional[str]
+    type: Optional[str] = None
 
 
 class Name(BaseModel):
@@ -58,8 +58,6 @@ class Url(BaseModel):
 
 
 ## contact model
-
-
 class Contact(BaseModel):
     addresses: Optional[List[Address]] = Field(
         None, description="Full contact address(es)"
@@ -72,12 +70,34 @@ class Contact(BaseModel):
     phones: Optional[List[Phone]] = Field(None, description="Contact phone number(s)")
     urls: Optional[List[Url]] = Field(None, description="Contact URL(s)")
     contact_image: Optional[str] = Field(None, description="Contact image")
+    vcard: Optional[str] = Field(
+        None,
+        description=(
+            "Virtual contact card. Present when the user shared a contact directly"
+            " (origin=other); omitted when origin=contact_request."
+        ),
+    )
+    origin: Optional[Literal["contact_request", "other"]] = Field(
+        None,
+        description=(
+            "How the contact information was shared."
+            " contact_request = user tapped a REQUEST_CONTACT_INFO button."
+            " other = user shared a contact directly in the chat."
+        ),
+    )
 
     # TODO: #69 move to base model
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def remover_none_fields(cls, values: dict):
+        if isinstance(values, BaseModel):
+            values = values.model_dump(exclude_none=True)
         return {k: v for k, v in values.items() if v}
 
 
-class Contacts(BaseModel):
-    __root__: List[Contact]
+class Contacts(RootModel[List[Contact]]):
+    def __iter__(self):
+        return iter(self.root)
+
+    def __getitem__(self, item) -> Contact:
+        return self.root[item]
